@@ -1,0 +1,94 @@
+{
+  "object": "decision",
+  "results": [
+    {
+      "decision": {
+        "kind": "scene",
+        "count": 1,
+        "indoors": true,
+        "setting": "indoors",
+        "text_in_image": true,
+        "text_kind": "none",
+        "color": "green",
+        "time_of_day": "day"
+      },
+      "fields": {
+        "kind": {
+          "value": "scene",
+          "probability": 0.6962458491325378,
+          "scored_nodes": 1,
+          "tree": true
+        },
+        "count": {
+          "interval_p10_p90": [
+            1,
+            4
+          ],
+          "value": 1,
+          "probability": 0.8289240598678589,
+          "scored_nodes": 1,
+          "tree": true
+        },
+        "indoors": {
+          "value": true,
+          "probability": 0.948138415813446,
+          "scored_nodes": 1,
+          "tree": true
+        },
+        "setting": {
+          "value": "indoors",
+          "probability": 0.8396475315093994,
+          "scored_nodes": 1,
+          "tree": true
+        },
+        "text_in_image": {
+          "value": true,
+          "probability": 0.6973932385444641,
+          "scored_nodes": 1,
+          "tree": true
+        },
+        "text_kind": {
+          "value": "none",
+          "probability": 0.9968098402023315,
+          "scored_nodes": 1,
+          "tree": true
+        },
+        "color": {
+          "value": "green",
+          "probability": 0.9812101721763611,
+          "scored_nodes": 1,
+          "tree": true
+        },
+        "time_of_day": {
+          "value": "day",
+          "probability": 0.9682888388633728,
+          "scored_nodes": 1,
+          "tree": true
+        }
+      },
+      "usage": {
+        "context_tokens": 24,
+        "media_tokens": 72,
+        "media_cached_tokens": 72,
+        "scored_rows": 47
+      }
+    }
+  ],
+  "model": "F:/lab/jev/momos-one/models/m.gguf",
+  "created": 1790386280,
+  "usage": {
+    "prompt_tokens": 640,
+    "cached_tokens": 0,
+    "context_tokens": 24,
+    "media_tokens": 72,
+    "media_cached_tokens": 72,
+    "scored_rows": 47
+  },
+  "timings": {
+    "prefill_ms": 328.7028,
+    "scoring_ms": 180.586,
+    "total_ms": 509.28880000000004,
+    "rounds": 1,
+    "per_decision_ms": 509.28880000000004
+  }
+}

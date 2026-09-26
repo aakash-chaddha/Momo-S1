@@ -1,0 +1,17 @@
+# dependencies and build output
+node_modules
+dist
+*.local
+
+# browser profiles and artifacts left by e2e/ and npm run smoke
+e2e/out
+
+# weights downloaded for the optional native parity check (the page downloads its own copy
+# into the browser cache)
+models
+
+# editors
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store

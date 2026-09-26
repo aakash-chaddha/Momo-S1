@@ -1,0 +1,273 @@
+{
+  "object": "decision",
+  "results": [
+    {
+      "decision": {
+        "kind": "scene",
+        "count": 1,
+        "indoors": true,
+        "setting": "indoors",
+        "text_in_image": true,
+        "text_kind": "none",
+        "color": "green",
+        "time_of_day": "day"
+      },
+      "fields": {
+        "kind": {
+          "value": "scene",
+          "probability": 0.6862515211105347,
+          "scored_nodes": 1,
+          "tree": true,
+          "candidates": [
+            {
+              "value": "animal",
+              "probability": 0.0028552894946187735
+            },
+            {
+              "value": "person",
+              "probability": 0.004722523503005505
+            },
+            {
+              "value": "object",
+              "probability": 0.04909825697541237
+            },
+            {
+              "value": "document",
+              "probability": 0.001423720270395279
+            },
+            {
+              "value": "screenshot",
+              "probability": 0.255648672580719
+            },
+            {
+              "value": "scene",
+              "probability": 0.6862515211105347
+            }
+          ]
+        },
+        "count": {
+          "interval_p10_p90": [
+            1,
+            4
+          ],
+          "value": 1,
+          "probability": 0.8288275599479675,
+          "scored_nodes": 1,
+          "tree": true,
+          "candidates": [
+            {
+              "value": 1,
+              "probability": 0.8288275599479675
+            },
+            {
+              "value": 2,
+              "probability": 0.03687233105301857
+            },
+            {
+              "value": 3,
+              "probability": 0.024671431630849838
+            },
+            {
+              "value": 4,
+              "probability": 0.014515901915729046
+            },
+            {
+              "value": 5,
+              "probability": 0.02080441452562809
+            },
+            {
+              "value": 6,
+              "probability": 0.019978240132331848
+            },
+            {
+              "value": 7,
+              "probability": 0.01675461046397686
+            },
+            {
+              "value": 8,
+              "probability": 0.011027582921087742
+            },
+            {
+              "value": 9,
+              "probability": 0.026547912508249283
+            }
+          ]
+        },
+        "indoors": {
+          "value": true,
+          "probability": 0.9509507417678833,
+          "scored_nodes": 1,
+          "tree": true,
+          "candidates": [
+            {
+              "value": true,
+              "probability": 0.9509507417678833
+            },
+            {
+              "value": false,
+              "probability": 0.04904923215508461
+            }
+          ]
+        },
+        "setting": {
+          "value": "indoors",
+          "probability": 0.8404300212860107,
+          "scored_nodes": 1,
+          "tree": true,
+          "candidates": [
+            {
+              "value": "indoors",
+              "probability": 0.8404300212860107
+            },
+            {
+              "value": "outdoors",
+              "probability": 0.15521621704101562
+            },
+            {
+              "value": "urban",
+              "probability": 0.0006191149586811662
+            },
+            {
+              "value": "nature",
+              "probability": 0.0017140068812295794
+            },
+            {
+              "value": "unclear",
+              "probability": 0.002020664745941758
+            }
+          ]
+        },
+        "text_in_image": {
+          "value": true,
+          "probability": 0.702061116695404,
+          "scored_nodes": 1,
+          "tree": true,
+          "candidates": [
+            {
+              "value": true,
+              "probability": 0.702061116695404
+            },
+            {
+              "value": false,
+              "probability": 0.29793891310691833
+            }
+          ]
+        },
+        "text_kind": {
+          "value": "none",
+          "probability": 0.9969400763511658,
+          "scored_nodes": 1,
+          "tree": true,
+          "candidates": [
+            {
+              "value": "none",
+              "probability": 0.9969400763511658
+            },
+            {
+              "value": "sign",
+              "probability": 0.0020462016109377146
+            },
+            {
+              "value": "label",
+              "probability": 0.00023339124163612723
+            },
+            {
+              "value": "document",
+              "probability": 0.0007741289446130395
+            },
+            {
+              "value": "ui",
+              "probability": 0.0000022353265194396954
+            },
+            {
+              "value": "handwriting",
+              "probability": 0.000003965929408877855
+            }
+          ]
+        },
+        "color": {
+          "value": "green",
+          "probability": 0.9810922145843506,
+          "scored_nodes": 1,
+          "tree": true,
+          "candidates": [
+            {
+              "value": "red",
+              "probability": 0.0006959244492463768
+            },
+            {
+              "value": "orange",
+              "probability": 0.0008350296993739903
+            },
+            {
+              "value": "yellow",
+              "probability": 0.010920487344264984
+            },
+            {
+              "value": "green",
+              "probability": 0.9810922145843506
+            },
+            {
+              "value": "blue",
+              "probability": 0.003261323319748044
+            },
+            {
+              "value": "purple",
+              "probability": 0.00019968635751865804
+            },
+            {
+              "value": "white",
+              "probability": 0.0007107421406544745
+            },
+            {
+              "value": "grey",
+              "probability": 0.00020524769206531346
+            },
+            {
+              "value": "black",
+              "probability": 0.00011519019608385861
+            },
+            {
+              "value": "brown",
+              "probability": 0.0019641555845737457
+            }
+          ]
+        },
+        "time_of_day": {
+          "value": "day",
+          "probability": 0.9662244915962219,
+          "scored_nodes": 1,
+          "tree": true,
+          "candidates": [
+            {
+              "value": "day",
+              "probability": 0.9662244915962219
+            },
+            {
+              "value": "night",
+              "probability": 0.0024587539955973625
+            },
+            {
+              "value": "unclear",
+              "probability": 0.03131674975156784
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 640,
+    "cached_tokens": 0,
+    "context_tokens": 24,
+    "media_tokens": 72,
+    "scored_rows": 47
+  },
+  "timings": {
+    "prefill_ms": 12148.845056,
+    "scoring_ms": 2192.809984,
+    "total_ms": 14341.65504,
+    "rounds": 1,
+    "per_decision_ms": 14341.65504
+  }
+}

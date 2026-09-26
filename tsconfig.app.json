@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@wllama/wllama": ["lib/wllama/src/index.ts"]
+    },
+
+    /* Linting */
+    "strict": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  // the page compiles the vendored library from source, so its files are part of this project
+  "include": ["src", "lib/wllama/src/**/*.ts"],
+  "exclude": ["lib/wllama/src/**/*.test.ts"]
+}

@@ -1,0 +1,95 @@
+{
+  "instructions": "You describe the image that comes with the request. The pixels are the evidence: the subject, how many, where it was taken and any text that is actually visible.\nkind: the main subject. animal for a living creature, person when a human is the subject, object for a product, vehicle or tool, document for a page of text, screenshot for a capture of a device or application UI, scene for a landscape or room with no clear subject.\ncount: how many of the main subject are visible, capped at 9; count carefully.\nindoors: true when the scene is inside a building, a vehicle or a room.\nsetting: the place the photo was taken, from the visible background only.\ntext_in_image: true only when letters or numbers are readable in the image itself.\ntext_kind: what the readable text is, none when there is none.\ncolor: the colour that covers most of the image.\ntime_of_day: day when the light is clearly daylight, night when it is clearly dark, unclear otherwise.",
+  "schema": {
+    "kind": {
+      "type": "enum",
+      "choices": [
+        "animal",
+        "person",
+        "object",
+        "document",
+        "screenshot",
+        "scene"
+      ],
+      "description": "The main subject of the image."
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9,
+      "description": "How many of the main subject are visible, capped at 9."
+    },
+    "indoors": {
+      "type": "boolean",
+      "description": "True when the scene is inside a building, vehicle or room."
+    },
+    "setting": {
+      "type": "enum",
+      "choices": [
+        "indoors",
+        "outdoors",
+        "urban",
+        "nature",
+        "unclear"
+      ],
+      "description": "Where the photo was taken, from the visible background."
+    },
+    "text_in_image": {
+      "type": "boolean",
+      "description": "True only when letters or numbers are readable in the image."
+    },
+    "text_kind": {
+      "type": "enum",
+      "choices": [
+        "none",
+        "sign",
+        "label",
+        "document",
+        "ui",
+        "handwriting"
+      ],
+      "description": "What the readable text is, none when there is none."
+    },
+    "color": {
+      "type": "enum",
+      "choices": [
+        "red",
+        "orange",
+        "yellow",
+        "green",
+        "blue",
+        "purple",
+        "white",
+        "grey",
+        "black",
+        "brown"
+      ],
+      "description": "The colour that covers most of the image."
+    },
+    "time_of_day": {
+      "type": "enum",
+      "choices": [
+        "day",
+        "night",
+        "unclear"
+      ],
+      "description": "Daylight, dark or unclear."
+    }
+  },
+  "contexts": [
+    [
+      {
+        "type": "text",
+        "text": "Decide from the attached image. Do not guess beyond what the pixels show."
+      },
+      {
+        "type": "image_url",
+        "image_url": {
+          "url": "<base64 shrunk>"
+        }
+      }
+    ]
+  ],
+  "mode": "auto",
+  "cache_prompt": false
+}

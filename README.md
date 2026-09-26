@@ -1,1 +1,166 @@
-"# Momos-1" 
+# Momos-1
+
+**momos-one — multimodal system-1 in your browser.** Give it an image and a finite question; it
+answers the whole schema in **one batched forward pass** and returns a probability for every field.
+Then it asks the same question token by token, so you can compare the two on your own machine.
+
+No backend, no upload, no API key. The model and the engine both run in the browser.
+
+![The decision section: engine timings, the assembled JSON and per-field probability bars](docs/img/02-decision.png)
+
+## Try it in two minutes
+
+Requirements: Chrome or Edge (desktop), Node 18+, a free ~350 MiB of disk for the cached weights.
+
+```bash
+npm install
+npm run dev
+```
+
+Open <http://localhost:5173/>, then:
+
+1. **00 / setup** - press **load the model**. This downloads ~307 MiB
+   (`LiquidAI/LFM2.5-VL-450M-GGUF`, model + projector) from Hugging Face. The browser caches it, so
+   the next visit loads in seconds. Press **load** once and the page stays ready.
+2. **01 / evidence** - drop `samples/bliss.png` (or any image, or paste one). One image becomes one
+   context; several images come back as several results in the same pass.
+3. **02 / question** - leave the default preset, or pick another from the dropdown.
+4. **03 / one pass** - press **run the decision**. You get the assembled JSON, a probability bar per
+   field, the numeric interval, and the engine's timing split.
+5. **04 / token by token** - press **run token by token** to generate the same answer with a JSON
+   grammar and see the measured ratio.
+
+On a 16-core desktop CPU (wasm, no GPU) the run above measured:
+
+| | |
+|---|---|
+| decision | **14.7 s** engine (12.2 s prefill + 2.5 s scoring), 47 scored rows, 640 prompt tokens (72 of them image), 8/8 fields with an exact distribution |
+| generation | **25.3 s** wall, first token 17.9 s, 72 tokens, ~10 t/s |
+| ratio | one pass ≈ 1.7× faster than generating the same JSON |
+
+The numbers you see on your machine will be your own: everything is timed with `performance.now()`
+and shown as measured.
+
+## What is actually happening
+
+`llama.cpp`'s server has a `POST /v1/decision` endpoint in this project's fork. Every field of the
+schema has a finite set of allowed values; each value is tokenised and scored as a token branch
+forked from one shared prefix with `llama_memory_seq_cp`, so all fields are evaluated in **one
+batched `llama_decode`** and cannot see each other. The answer is assembled by code, not generated,
+and every field comes back with its probability (plus the whole distribution when it was scored
+exhaustively). An image is encoded by the vision projector and decoded into the trunk before the
+branches fork, so the fields are scored directly on the pixels.
+
+**momos-one does not re-implement that engine.** The wasm build runs the same `handle_decision` as
+the native server: `wllama.createDecision(body)` posts a `SERVER_TASK_TYPE_DECISION` task into the
+same `server_context` the server uses. Parsing, schema compilation, prompt rendering, tokenisation,
+media encoding, branch scoring, aggregation and the error messages are shared code.
+
+The request is the endpoint's own body, so it can be copied straight to a native server:
+
+```ts
+const res = await wllama.createDecision({
+  instructions: 'kind: the main subject of the image. count: how many…',
+  schema: {
+    kind: { type: 'enum', choices: ['animal', 'person', 'object'], description: 'the main subject' },
+    count: { type: 'integer', minimum: 1, maximum: 9, description: 'how many, capped at 9' },
+  },
+  contexts: [[
+    { type: 'text', text: 'decide from the attached image' },
+    { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,…' } },
+  ]],
+  mode: 'auto',       // auto | tree | greedy
+  cache_prompt: true, // reuse the instructions + field catalogue across runs
+});
+// res.results[i].decision          -> assembled object
+// res.results[i].fields[name]      -> value, probability, scored_nodes, tree, candidates, interval
+// res.usage / res.timings          -> tokens, scored rows, prefill_ms, scoring_ms, total_ms
+```
+
+Section **03** shows both the request and the response JSON, with copy and download buttons.
+
+## Testing it on your own
+
+- **Your own images.** Drop, pick or paste any image. Big photos are downscaled to 512 px and
+  re-encoded in the page, and the decision response reports how many tokens the image cost
+  (`media_tokens`).
+- **Your own question.** The schema editor is a view over the endpoint's compact field specs
+  (`enum`, `boolean`, `integer`, `number`); you can switch to JSON and hand-write it. Numeric fields
+  choose their aggregate (mode / median / mean) and report a p10–p90 interval. A preset such as
+  "Ticket routing, text only" needs no image at all.
+- **Exact vs cheap.** `mode: 'auto'` scores fields exhaustively up to 128 allowed values and walks
+  larger ones greedily; the result marks each field `exact distribution` or `greedy walk`. A wide
+  schema is grouped into rounds to fit the 12 decision sequences (`rounds` in the timings).
+- **Prefix reuse.** `cache_prompt: true` reuses the instructions and field catalogue between runs;
+  the response's `cached_tokens` shows how much was reused.
+- **The machine-checked run.** `npm run smoke` drives the whole page in a headless browser,
+  loads the model, attaches `samples/bliss.png`, runs both passes and writes
+  `e2e/out/summary.json` plus screenshots. It is the same path a person clicks, with no native
+  code involved. It uses Edge on Windows and the bundled Chromium elsewhere
+  (`npx playwright install chromium` once, or pass `--browser chrome`).
+
+## Deploy it
+
+`npm run build` writes a static site to `dist/`. Serve it with these two headers and the wasm runs
+multithreaded:
+
+```
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+```
+
+`npm run preview` serves `dist/` with those headers. Netlify, Vercel, Cloudflare Pages and Hugging
+Face Spaces can set them; GitHub Pages cannot, so there the page falls back to a single thread and
+still works, just slower.
+
+## Honesty about the model
+
+The default is a 450M-parameter vision model. It answers small, well-specified questions
+imperfectly, and the page is built to show that instead of hiding it: every field carries its
+probability, a probability below 50% is marked **low confidence**, numeric fields carry an interval,
+and fields scored by the greedy walk are marked. Read a low probability as a weak answer, not as a
+fact. A second, larger model can be added in `src/config.ts` once it has been measured on this
+page's parameters.
+
+## Repository layout
+
+```
+src/                    the page (React + TypeScript)
+  lib/schema.ts         compact field specs <-> JSON Schema, validation
+  lib/multimodal.ts     image downscale + re-encode
+  lib/runs.ts           the decision and generation calls
+  lib/presets.ts        example questions
+lib/wllama/             the wasm library: fork source + prebuilt wllama.wasm (see PROVENANCE.md)
+samples/bliss.png       a small image to try it with
+e2e/decision-smoke.mjs  headless end-to-end run (npm run smoke)
+docs/                   plan, spec, implementation report, parity evidence, screenshots
+```
+
+## Verification
+
+- `docs/PARITY.md` - the same request posted to a native `llama-server` and to the browser:
+  **identical decisions**, every probability within 1.0 pp, identical token accounting
+  (`docs/parity-*.json` are the raw bodies).
+- `docs/evidence-smoke.json` - the numbers of the last smoke run (timings, tokens, scored rows).
+- The library's decision API is covered by browser tests in the wllama fork
+  (`src/decision.test.ts`): one result per context with every value on-schema, distribution
+  consistency, usage/timing accounting, prefix-cache stability, and the error taxonomy.
+
+## Limitations
+
+- Firefox and Safari are not supported in this cut: it ships the memory64 + JSPI build, not the
+  asyncify compatibility build.
+- The first visit downloads ~307 MiB; after that the browser cache serves it.
+- WebGPU is used when the browser has it; the published numbers are CPU-only wasm numbers.
+- The wasm engine is roughly an order of magnitude slower than a native CUDA build. The point of
+  the page is the method and the comparison, both measured on your machine.
+
+## License and attribution
+
+`lib/wllama` is the MIT-licensed wllama library (see `lib/wllama/LICENCE`); the wasm binary contains
+[llama.cpp](https://github.com/ggml-org/llama.cpp) (MIT) with this project's `/v1/decision` engine.
+Model weights are used under the terms of their Hugging Face repositories
+([`LiquidAI/LFM2.5-VL-450M-GGUF`](https://huggingface.co/LiquidAI/LFM2.5-VL-450M-GGUF)).
+
+Found a bug? Open an issue in this repository; for the library or the engine, the forks are
+`aakash-chaddha/wllama` and `thecodacus/llama.cpp`.
