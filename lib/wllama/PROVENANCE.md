@@ -33,7 +33,10 @@ Fork pin: `llama.cpp` at `89f5c5d27` (`parallel-decision-media` branch, thecodac
   `common/arg.cpp` and `tools/server/server-context.cpp`. It adds the **decision media encoder
   cache** (the embeddings of an image are encoded once per session and reused by later decisions on
   the same bytes), audio parts and several images per context. The encoder cache is what makes a
-  repeated decision on the same image skip the ~1.8 s vision encode; it is on by default.
+  repeated decision on the same image skip the vision encode; it is on by default.
+  `server-context.cpp` also carries a local fix on top of the cut: media is encoded **before** the
+  engine starts decoding, not lazily from inside its decode loop, because the two graphs must not
+  run on the same backend at once (the WebGPU backend is asynchronous).
 
 ## How to rebuild the wasm
 

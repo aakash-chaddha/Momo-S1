@@ -11,7 +11,10 @@ import { chromium } from 'playwright';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
-const IMAGE = path.join(ROOT, 'samples/bliss.png');
+const queryArg = process.argv.indexOf('--query');
+const QUERY = queryArg >= 0 ? process.argv[queryArg + 1] : '';
+const imageArg = process.argv.indexOf('--image');
+const IMAGE = imageArg >= 0 ? path.resolve(process.argv[imageArg + 1]) : path.join(ROOT, 'samples/bliss.png');
 const PORT = 4319;
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.wasm': 'application/wasm', '.png': 'image/png' };
 
@@ -37,12 +40,15 @@ const browser = await chromium.launchPersistentContext(path.join(os.tmpdir(), 'm
   viewport: { width: 1280, height: 900 },
 });
 const page = browser.pages()[0] ?? (await browser.newPage());
-await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load', timeout: 60_000 });
+await page.goto(`http://127.0.0.1:${PORT}/${QUERY}`, { waitUntil: 'load', timeout: 60_000 });
 
 await page.getByRole('button', { name: 'load the model' }).click();
 await page.waitForFunction(() => window.__momos?.phase === 'ready', undefined, { timeout: 10 * 60_000, polling: 500 });
+const prep0 = Date.now();
 await page.setInputFiles('input[type=file]', IMAGE);
 await page.waitForSelector('.thumb img');
+console.log(`image prepared in ${Date.now() - prep0} ms`);
+console.log('image:', (await page.locator('.thumb .meta').innerText()).replace(/\s+/g, ' '));
 
 for (let i = 1; i <= 3; i++) {
   const t0 = Date.now();
@@ -56,7 +62,7 @@ for (let i = 1; i <= 3; i++) {
   console.log(
     `run ${i}: wall ${(d.wallMs / 1000).toFixed(2)} s | engine ${(t.total_ms / 1000).toFixed(2)} s ` +
       `(prefill ${(t.prefill_ms / 1000).toFixed(2)} s, scoring ${(t.scoring_ms / 1000).toFixed(2)} s, rounds ${t.rounds}) | ` +
-      `rows ${u.scored_rows} | cached ${u.cached_tokens}/${u.prompt_tokens} | media ${u.media_tokens}`
+      `rows ${u.scored_rows} | cached ${u.cached_tokens}/${u.prompt_tokens} | media ${u.media_tokens}${u.media_cached_tokens ? ` (${u.media_cached_tokens} from the encoder cache)` : ''}`
   );
   await page.waitForTimeout(1500);
 }

@@ -36,7 +36,14 @@ export const DEFAULT_MODEL = MODELS[0];
 export const totalSize = (m: ModelChoice) => m.size + m.mmprojSize;
 
 // Fixed, documented load parameters. A report can be reproduced from these numbers alone.
-export const MAX_IMAGE_EDGE = 512; // px; in wasm the vision encoder is on the CPU
+// One debug switch is read from the URL: ?edge=384 changes the image downscale. (Forcing the
+// vision projector to the CPU with mmproj_offload: false crashes this wasm build, so the page
+// leaves llama.cpp's default: the projector offloads when a GPU backend exists.)
+const query = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
+const queryEdge = Number(query.get('edge'));
+
+export const MAX_IMAGE_EDGE =
+  Number.isFinite(queryEdge) && queryEdge >= 128 && queryEdge <= 1024 ? queryEdge : 512; // px
 export const DECISION_SEQS = 12; // cached prefix + trunks + branches; the schema is scored in rounds
 
 export const loadParams = (model: ModelChoice): LoadModelParams => ({

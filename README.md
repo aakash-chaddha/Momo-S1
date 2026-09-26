@@ -84,7 +84,8 @@ Section **03** shows both the request and the response JSON, with copy and downl
 
 - **Your own images.** Drop, pick or paste any image. Big photos are downscaled to 512 px and
   re-encoded in the page, and the decision response reports how many tokens the image cost
-  (`media_tokens`).
+  (`media_tokens`). Image tokens are what the run costs: a 300×241 sample is 72 tokens, a 980×673
+  photo is 176. `?edge=384` (or 256) downscales harder when you want it cheaper.
 - **Your own question.** The schema editor is a view over the endpoint's compact field specs
   (`enum`, `boolean`, `integer`, `number`); you can switch to JSON and hand-write it. Numeric fields
   choose their aggregate (mode / median / mean) and report a p10–p90 interval. A preset such as
@@ -95,7 +96,11 @@ Section **03** shows both the request and the response JSON, with copy and downl
 - **Prefix and image reuse.** `cache_prompt: true` reuses the instructions and field catalogue
   between runs (`cached_tokens` in the response), and the engine's media encoder cache reuses the
   vision embeddings of an image it has already seen (`media_cached_tokens`), so changing one field
-  and running again costs ~4.9 s instead of ~6.7 s.
+  and running again costs ~4.9 s instead of ~6.7 s for the sample image. The encoder runs once,
+  before the engine starts decoding, so it never contends with an in-flight decode graph.
+- **Slow images.** If an image run is slow, look at the split: a large `prefill` on the first run is
+  the vision encoder (cached afterwards), a large `scoring` is the schema's width, and `media_tokens`
+  tells you how much image the model got. Lower the downscale with `?edge=384` to cut all three.
 - **The machine-checked run.** `npm run smoke` drives the whole page in a headless browser,
   loads the model, attaches `samples/bliss.png`, runs both passes and writes
   `e2e/out/summary.json` plus screenshots. It is the same path a person clicks, with no native
