@@ -1,4 +1,4 @@
-import type { LoadModelParams } from '@wllama/wllama';
+import { LogLevel, type LoadModelParams } from '@wllama/wllama';
 // prebuilt with `./scripts/build_wasm.sh` in the wllama fork; shipped in this repository
 import wllamaWasm from '../lib/wllama/src/wasm/wllama.wasm?url';
 
@@ -41,6 +41,9 @@ export const totalSize = (m: ModelChoice) => m.size + m.mmprojSize;
 // leaves llama.cpp's default: the projector offloads when a GPU backend exists.)
 const query = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
 const queryEdge = Number(query.get('edge'));
+
+// ?log=info prints the engine's load report (which tensors go to WebGPU) to the console
+export const LOG_LEVEL = query.get('log') === 'info' ? LogLevel.INFO : LogLevel.WARN;
 
 export const MAX_IMAGE_EDGE =
   Number.isFinite(queryEdge) && queryEdge >= 128 && queryEdge <= 1024 ? queryEdge : 512; // px

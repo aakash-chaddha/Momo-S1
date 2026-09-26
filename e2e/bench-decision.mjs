@@ -11,6 +11,8 @@ import { chromium } from 'playwright';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
+const headful = process.argv.includes('--headful');
+const showLogs = process.argv.includes('--logs');
 const queryArg = process.argv.indexOf('--query');
 const QUERY = queryArg >= 0 ? process.argv[queryArg + 1] : '';
 const imageArg = process.argv.indexOf('--image');
@@ -36,11 +38,12 @@ await new Promise((r) => server.listen(PORT, '127.0.0.1', r));
 
 const browser = await chromium.launchPersistentContext(path.join(os.tmpdir(), 'momos-one-profile'), {
   channel: process.platform === 'win32' ? 'msedge' : 'chromium',
-  headless: true,
+  headless: !headful,
   viewport: { width: 1280, height: 900 },
 });
 const page = browser.pages()[0] ?? (await browser.newPage());
-await page.goto(`http://127.0.0.1:${PORT}/${QUERY}`, { waitUntil: 'load', timeout: 60_000 });
+if (showLogs) page.on('console', (m) => console.log('[page]', m.text()));
+await page.goto(`http://127.0.0.1:${PORT}/${QUERY ? `?${QUERY}` : ''}`, { waitUntil: 'load', timeout: 60_000 });
 
 await page.getByRole('button', { name: 'load the model' }).click();
 await page.waitForFunction(() => window.__momos?.phase === 'ready', undefined, { timeout: 10 * 60_000, polling: 500 });

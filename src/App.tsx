@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  LogLevel,
   Wllama,
   type DecisionContentPart,
   type DecisionRequest,
@@ -9,6 +8,7 @@ import {
 import {
   DECISION_SEQS,
   DEFAULT_MODEL,
+  LOG_LEVEL,
   MAX_IMAGE_EDGE,
   WLLAMA_PATHS,
   loadParams,
@@ -121,7 +121,7 @@ export default function App() {
         { repo: model.repo, file: model.file, mmprojFile: model.mmprojFile },
         {
           ...loadParams(model),
-          log_level: LogLevel.WARN,
+          log_level: LOG_LEVEL,
           progressCallback: ({ loaded, total }) => {
             if (total) setProgress(Math.min(1, loaded / total));
             if (total && loaded >= total) {

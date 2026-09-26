@@ -98,6 +98,10 @@ Section **03** shows both the request and the response JSON, with copy and downl
   vision embeddings of an image it has already seen (`media_cached_tokens`), so changing one field
   and running again costs ~4.9 s instead of ~6.7 s for the sample image. The encoder runs once,
   before the engine starts decoding, so it never contends with an in-flight decode graph.
+- **What runs on the GPU.** Load the page with `?log=info` and open the console: llama.cpp prints
+  the real split (in a WebGPU browser everything is offloaded — the LLM layers, the KV cache and the
+  vision projector — while flash attention and several projector ops are not supported by that
+  backend and fall back). On this class of machine the GPU does not speed the vision encoder up.
 - **Slow images.** If an image run is slow, look at the split: a large `prefill` on the first run is
   the vision encoder (cached afterwards), a large `scoring` is the schema's width, and `media_tokens`
   tells you how much image the model got. Lower the downscale with `?edge=384` to cut all three.
