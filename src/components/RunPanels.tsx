@@ -3,8 +3,9 @@ import type { DecisionRun, GenerationRun } from '../lib/runs';
 import { RawJson } from './RawJson';
 
 const pct = (p: number) => `${(p * 100).toFixed(1)}%`;
-const ms = (v: number | null | undefined) =>
-  v == null ? '—' : `${v.toFixed(v < 100 ? 1 : 0)} ms`;
+// times are shown in seconds: one decimal once past 10 s, two below that
+const sec = (v: number | null | undefined) =>
+  v == null ? '—' : `${(v / 1000).toFixed(v >= 10_000 ? 1 : 2)} s`;
 
 function Metric({ k, v, sub }: { k: string; v: string; sub?: string }) {
   return (
@@ -110,10 +111,10 @@ export function DecisionPanel({
       {response && timings && usage && (
         <>
           <div className="metrics">
-            <Metric k="one pass" v={ms(timings.total_ms)} sub="engine" />
-            <Metric k="wall" v={ms(run.wallMs)} sub="round trip" />
-            <Metric k="prefill" v={ms(timings.prefill_ms)} />
-            <Metric k="scoring" v={ms(timings.scoring_ms)} />
+            <Metric k="one pass" v={sec(timings.total_ms)} sub="engine" />
+            <Metric k="wall" v={sec(run.wallMs)} sub="round trip" />
+            <Metric k="prefill" v={sec(timings.prefill_ms)} />
+            <Metric k="scoring" v={sec(timings.scoring_ms)} />
             <Metric k="rounds" v={String(timings.rounds)} />
             <Metric k="scored rows" v={String(usage.scored_rows)} />
             <Metric k="prompt tokens" v={String(usage.prompt_tokens)} />
@@ -124,8 +125,13 @@ export function DecisionPanel({
             />
             <Metric k="media tokens" v={String(usage.media_tokens)} />
             <Metric
+              k="media cached"
+              v={String(usage.media_cached_tokens ?? 0)}
+              sub={usage.media_cached_tokens ? 'encoder reused' : undefined}
+            />
+            <Metric
               k="per decision"
-              v={ms(timings.per_decision_ms)}
+              v={sec(timings.per_decision_ms)}
               sub={response.results.length > 1 ? `${response.results.length} contexts` : undefined}
             />
           </div>
@@ -260,8 +266,8 @@ export function GenerationPanel({
       {run.answers.map((a) => (
         <div className="answer" key={a.contextIndex}>
           <div className="metrics">
-            <Metric k="first token" v={ms(a.ttftMs)} />
-            <Metric k="wall" v={ms(a.wallMs)} />
+            <Metric k="first token" v={sec(a.ttftMs)} />
+            <Metric k="wall" v={sec(a.wallMs)} />
             <Metric
               k="generated"
               v={String(a.usage?.completion_tokens ?? a.predictedN ?? '—')}
@@ -275,7 +281,7 @@ export function GenerationPanel({
                   : '—'
               }
             />
-            <Metric k="prompt" v={ms(a.promptMs)} />
+            <Metric k="prompt" v={sec(a.promptMs)} />
           </div>
           <pre>{a.text || '(empty)'}</pre>
         </div>
@@ -293,8 +299,8 @@ export function GenerationPanel({
       {ratio && (
         <div className="answer">
           <div className="metrics">
-            <Metric k="one pass" v={ms(decisionWallMs)} />
-            <Metric k="generation" v={ms(total)} sub={`${run.answers.length} completion(s)`} />
+            <Metric k="one pass" v={sec(decisionWallMs)} />
+            <Metric k="generation" v={sec(total)} sub={`${run.answers.length} completion(s)`} />
             <Metric
               k="ratio"
               v={`${ratio.toFixed(1)}×`}

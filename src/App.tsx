@@ -200,7 +200,7 @@ export default function App() {
       const { response, wallMs } = await runDecision(w, body, ctrl.signal);
       setDecision({
         running: false,
-        status: `done · ${response.results.length} decision(s) · engine ${response.timings.total_ms.toFixed(0)} ms · wall ${wallMs.toFixed(0)} ms`,
+        status: `done · ${response.results.length} decision(s) · engine ${(response.timings.total_ms / 1000).toFixed(1)} s · wall ${(wallMs / 1000).toFixed(1)} s`,
         error: '',
         wallMs,
         response,

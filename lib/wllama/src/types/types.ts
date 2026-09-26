@@ -184,6 +184,8 @@ export interface DecisionItem {
   usage: {
     context_tokens: number;
     media_tokens: number;
+    // present when the engine supports the media encoder cache (fork cut 3+)
+    media_cached_tokens?: number;
     scored_rows: number;
   };
 }
@@ -198,6 +200,8 @@ export interface DecisionResponse {
     cached_tokens: number;
     context_tokens: number;
     media_tokens: number;
+    // present when the engine supports the media encoder cache (fork cut 3+)
+    media_cached_tokens?: number;
     scored_rows: number;
   };
   timings: {

@@ -42,8 +42,8 @@ native CPU kernels, not a difference in the method.
 | native | 640 | 0 | 24 | 72 | 47 |
 
 (The native build is the fork's working tree with the in-progress media cut, which is why it also
-reports `media_cached_tokens`; the wasm build pins `89f5c5d27` plus the `candidates` patch. Neither
-changes the decision.)
+reports `media_cached_tokens`; the wasm build pins `89f5c5d27` plus the `candidates` patch and the
+media encoder cache. Neither changes the decision.)
 
 ## Timing (same machine, different backends)
 

@@ -34,12 +34,13 @@ On a 16-core desktop CPU (wasm, no GPU) the run above measured:
 
 | | |
 |---|---|
-| decision | **14.7 s** engine (12.2 s prefill + 2.5 s scoring), 47 scored rows, 640 prompt tokens (72 of them image), 8/8 fields with an exact distribution |
+| first decision (cold prefix, image encoded) | **15.9 s** wall · 13.7 s prefill + 2.2 s scoring, 47 scored rows, 640 prompt tokens (72 of them image), 8/8 fields with an exact distribution |
+| every later decision (same image and schema) | **4.9 s** wall · the instructions and field catalogue come from the prompt cache (544/640 tokens) and the vision encoder output comes from the media cache |
 | generation | **25.3 s** wall, first token 17.9 s, 72 tokens, ~10 t/s |
 | ratio | one pass ≈ 1.7× faster than generating the same JSON |
 
 The numbers you see on your machine will be your own: everything is timed with `performance.now()`
-and shown as measured.
+and shown as measured. `npm run bench` prints the cold and warm split for three decisions in a row.
 
 ## What is actually happening
 
@@ -91,8 +92,10 @@ Section **03** shows both the request and the response JSON, with copy and downl
 - **Exact vs cheap.** `mode: 'auto'` scores fields exhaustively up to 128 allowed values and walks
   larger ones greedily; the result marks each field `exact distribution` or `greedy walk`. A wide
   schema is grouped into rounds to fit the 12 decision sequences (`rounds` in the timings).
-- **Prefix reuse.** `cache_prompt: true` reuses the instructions and field catalogue between runs;
-  the response's `cached_tokens` shows how much was reused.
+- **Prefix and image reuse.** `cache_prompt: true` reuses the instructions and field catalogue
+  between runs (`cached_tokens` in the response), and the engine's media encoder cache reuses the
+  vision embeddings of an image it has already seen (`media_cached_tokens`), so changing one field
+  and running again costs ~4.9 s instead of ~6.7 s.
 - **The machine-checked run.** `npm run smoke` drives the whole page in a headless browser,
   loads the model, attaches `samples/bliss.png`, runs both passes and writes
   `e2e/out/summary.json` plus screenshots. It is the same path a person clicks, with no native
@@ -133,6 +136,7 @@ src/                    the page (React + TypeScript)
 lib/wllama/             the wasm library: fork source + prebuilt wllama.wasm (see PROVENANCE.md)
 samples/bliss.png       a small image to try it with
 e2e/decision-smoke.mjs  headless end-to-end run (npm run smoke)
+e2e/bench-decision.mjs  cold vs warm decision timings (npm run bench)
 docs/                   plan, spec, implementation report, parity evidence, screenshots
 ```
 
@@ -158,7 +162,8 @@ docs/                   plan, spec, implementation report, parity evidence, scre
 ## License and attribution
 
 `lib/wllama` is the MIT-licensed wllama library (see `lib/wllama/LICENCE`); the wasm binary contains
-[llama.cpp](https://github.com/ggml-org/llama.cpp) (MIT) with this project's `/v1/decision` engine.
+[llama.cpp](https://github.com/ggml-org/llama.cpp) (MIT) with this project's `/v1/decision` engine,
+the `candidates` patch and the media encoder cache (see `lib/wllama/PROVENANCE.md`).
 Model weights are used under the terms of their Hugging Face repositories
 ([`LiquidAI/LFM2.5-VL-450M-GGUF`](https://huggingface.co/LiquidAI/LFM2.5-VL-450M-GGUF)).
 

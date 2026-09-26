@@ -103,17 +103,18 @@
       "cache_prompt": true
     },
     "timings": {
-      "prefill_ms": 11853.945088,
-      "scoring_ms": 2266.73536,
-      "total_ms": 14120.680448000001,
+      "prefill_ms": 13787.319552,
+      "scoring_ms": 2204.429824,
+      "total_ms": 15991.749376,
       "rounds": 1,
-      "per_decision_ms": 14120.680448000001
+      "per_decision_ms": 15991.749376
     },
     "usage": {
       "prompt_tokens": 640,
       "cached_tokens": 0,
       "context_tokens": 24,
       "media_tokens": 72,
+      "media_cached_tokens": 0,
       "scored_rows": 47
     },
     "answer": {
@@ -368,14 +369,14 @@
         ]
       }
     },
-    "wallMs": 16264.609999999404
+    "wallMs": 16048.730000000447
   },
   "generation": [
     {
-      "firstTokenMs": 17434.76000000164,
-      "wallMs": 24255.359999999404,
+      "firstTokenMs": 18245.81500000134,
+      "wallMs": 25184.294999998063,
       "predictedN": 72,
-      "predictedMs": 7107.864,
+      "predictedMs": 7249,
       "text": "{\n  \"kind\": \"scene\",\n  \"count\": 1,\n  \"indoors\": false,\n  \"setting\": \"outdoors\",\n  \"text_in_image\": false,\n  \"text_kind\": \"none\",\n  \"color\": \"green\",\n  \"time_of_day\": \"day\"\n}"
     }
   ],
