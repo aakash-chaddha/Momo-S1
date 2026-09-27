@@ -24,6 +24,15 @@ function Lightbox({ view, onClose }: { view: Viewable; onClose: () => void }) {
 
   return (
     <div className="lightbox" onClick={onClose}>
+      <button
+        type="button"
+        className="lightbox-close"
+        onClick={onClose}
+        autoFocus
+        aria-label="Close full-size view"
+      >
+        ×
+      </button>
       <figure
         className="lightbox-plate"
         role="dialog"
@@ -36,7 +45,7 @@ function Lightbox({ view, onClose }: { view: Viewable; onClose: () => void }) {
           <span>
             {view.name} · {view.note}
           </span>
-          <button type="button" className="ghost quiet" onClick={onClose} autoFocus>
+          <button type="button" className="ghost quiet" onClick={onClose}>
             close
           </button>
         </figcaption>
