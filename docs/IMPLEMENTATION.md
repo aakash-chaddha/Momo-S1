@@ -83,7 +83,7 @@ including the engine's own `--decision-seqs` message).
 ## Release packaging (added after the first draft)
 
 - The project now lives in `F:/lab/jev/Momo-S1/` as a standalone repository: the page, the e2e
-  runner, `samples/bliss.png`, the docs and screenshots, and a vendored copy of the library in
+  runner, `public/samples/bliss.png`, the docs and screenshots, and a vendored copy of the library in
   `lib/wllama/src` (fork source + the prebuilt `wllama.wasm`). `npm install && npm run dev` works
   without the wllama fork, the llama.cpp fork or emscripten; `lib/wllama/PROVENANCE.md` records the
   snapshot and how to rebuild the wasm.

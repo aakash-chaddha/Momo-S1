@@ -70,8 +70,19 @@ async function loadFixture() {
     timings: d.timings,
   };
   const gen = raw.generation?.[0];
+  const req = d.request ?? {};
+  const first = req.contexts?.[0];
+  const contextText =
+    typeof first === 'string'
+      ? first
+      : (Array.isArray(first) ? first.find((p) => p?.type === 'text')?.text : '') ?? '';
   return {
     phase: 'ready',
+    request: {
+      instructions: req.instructions,
+      schema: req.schema,
+      context: contextText,
+    },
     info: raw.info ?? {
       n_ctx: raw.loadedInfo.n_ctx,
       n_ubatch: raw.loadedInfo.n_ubatch,
@@ -481,7 +492,7 @@ async function interactionPass(page, label) {
   const added = await laneCount();
   check('adding a field adds a lane to the fork rail', added === before + 1, `${before} then ${added}`);
 
-  const named = page.getByLabel('field name').nth(8);
+  const named = page.getByLabel('field name').last();
   await named.fill('mood');
   await page.waitForTimeout(250);
   const laneNames = await page.evaluate(() =>
@@ -493,8 +504,8 @@ async function interactionPass(page, label) {
     laneNames.join(',')
   );
 
-  // the interesting state: eight lanes carry the last run, the ninth is a ghost waiting for the
-  // next one. It is the state a reader is in the moment they edit the schema after a run.
+  // the interesting state: the lanes that carry the last run, plus a ghost for the field that was
+  // just added. It is the state a reader is in the moment they edit the schema after a run.
   await page.locator('.rail-row a[href="#stage-03"]').click();
   await settle();
   await page.screenshot({ path: path.join(OUT, 'partial-fork.png') });
@@ -502,7 +513,12 @@ async function interactionPass(page, label) {
   await settle();
 
   // the field count is live in the rail as well
-  check('the rail reports the new field count', /9 fields/.test(await railNote('stage-02')), await railNote('stage-02'));
+  const fieldCount = await page.getByLabel('field name').count();
+  check(
+    'the rail reports the new field count',
+    new RegExp(`${fieldCount} fields`).test(await railNote('stage-02')),
+    await railNote('stage-02')
+  );
 
   // the two views of one schema object have to round-trip
   const jsonTab = page.locator('#stage-02 .tabs button', { hasText: 'JSON' });
@@ -517,7 +533,7 @@ async function interactionPass(page, label) {
   }
   check(
     'the JSON view shows the same object the form edits',
-    !!parsed && parsed.mood && parsed.kind?.choices?.length === 6,
+    !!parsed && parsed.mood && Object.keys(parsed).length === fieldCount,
     `${Object.keys(parsed ?? {}).length} keys`
   );
   await page.locator('#stage-02 .tabs button', { hasText: 'form' }).click();
@@ -728,7 +744,15 @@ async function main() {
     await page.waitForTimeout(500);
 
     const dir = path.join(OUT, pass.name);
-    const names = ['stage-00', 'stage-01', 'stage-02', 'stage-03', 'stage-04', 'stage-wire'];
+    const names = [
+      'stage-00',
+      'stage-01',
+      'stage-02',
+      'stage-03',
+      'stage-04',
+      'stage-05',
+      'stage-wire',
+    ];
     await shootStages(page, dir, names);
 
     const layout = await layoutPass(page, pass.name, pass.viewport.width);

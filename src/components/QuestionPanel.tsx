@@ -130,6 +130,9 @@ export function QuestionPanel({
           </select>
         </label>
         <span className="spacer" />
+        <span className="status">
+          a preset is a start, not a limit · + add field keeps going up to the endpoint's 64
+        </span>
       </div>
 
       <label className="field">
@@ -142,7 +145,7 @@ export function QuestionPanel({
           onChange={(e) => setInstructions(e.target.value)}
           rows={9}
           disabled={disabled}
-          placeholder="e.g. kind: the main subject of the image. count: how many…"
+          placeholder="e.g. you triage one inbound email. category: what the email is about…"
         />
       </label>
 

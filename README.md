@@ -22,15 +22,23 @@ Open <http://localhost:5173/>, then:
 1. **00 / setup** - press **load the model**. This downloads ~307 MiB
    (`LiquidAI/LFM2.5-VL-450M-GGUF`, model + projector) from Hugging Face. The browser caches it, so
    the next visit loads in seconds. Press **load** once and the page stays ready.
-2. **01 / evidence** - drop `samples/bliss.png` (or any image, or paste one). One image becomes one
-   context; several images come back as several results in the same pass.
-3. **02 / question** - leave the default preset, or pick another from the dropdown.
+2. **01 / evidence** - click one of the samples: three complaint emails and three product
+   screenshots, rendered as an ordinary customer would send them (`public/samples/`). Drop, paste
+   or pick your own image instead. One image at a time: adding another replaces it, and clicking
+   the image opens it at full size.
+3. **02 / question** - leave the default preset (email triage), or pick another from the
+   dropdown. A preset ships at most three fields; it is a start, not a limit, and the form adds as
+   many fields as you want to test with (up to the endpoint's 64).
 4. **03 / one pass** - press **run the decision**. You get the assembled JSON, a probability bar per
    field, the numeric interval, and the engine's timing split.
 5. **04 / token by token** - press **run token by token** to generate the same answer with a JSON
-   grammar and see the measured ratio.
+   grammar, streamed as it arrives.
+6. **05 / side by side** - press **run both** to run the two back to back (or come here once both
+   have run). The two wall times are on one bar chart with the measured ratio, and the two answers
+   are on the same fields with the agreement per field.
 
-On a 16-core desktop CPU (wasm, no GPU) the run above measured:
+On a 16-core desktop CPU (wasm, no GPU) a recorded run measured (an eight-field schema of that
+period; the presets now ship at most three fields, so your pass scores fewer rows):
 
 | | |
 |---|---|
@@ -82,13 +90,17 @@ Section **03** shows both the request and the response JSON, with copy and downl
 
 ## Testing it on your own
 
-- **Your own images.** Drop, pick or paste any image. Big photos are downscaled to 512 px and
+- **Your own images.** One at a time: drop, pick or paste an image, or take one of the samples:
+  three complaint
+  emails and three product screenshots (an error page, a declined checkout, an expired sign-in).
+  Click the image to see it at full size. Big photos are downscaled to 512 px and
   re-encoded in the page, and the decision response reports how many tokens the image cost
   (`media_tokens`). Image tokens are what the run costs: a 300×241 sample is 72 tokens, a 980×673
   photo is 176. `?edge=384` (or 256) downscales harder when you want it cheaper.
 - **Your own question.** The schema editor is a view over the endpoint's compact field specs
   (`enum`, `boolean`, `integer`, `number`); you can switch to JSON and hand-write it. Numeric fields
-  choose their aggregate (mode / median / mean) and report a p10–p90 interval. A preset such as
+  choose their aggregate (mode / median / mean) and report a p10–p90 interval. A preset ships at
+  most three fields and the form is uncapped: add as many as you want to test with. A preset such as
   "Ticket routing, text only" needs no image at all.
 - **Exact vs cheap.** `mode: 'auto'` scores fields exhaustively up to 128 allowed values and walks
   larger ones greedily; the result marks each field `exact distribution` or `greedy walk`. A wide
@@ -106,7 +118,7 @@ Section **03** shows both the request and the response JSON, with copy and downl
   the vision encoder (cached afterwards), a large `scoring` is the schema's width, and `media_tokens`
   tells you how much image the model got. Lower the downscale with `?edge=384` to cut all three.
 - **The machine-checked run.** `npm run smoke` drives the whole page in a headless browser,
-  loads the model, attaches `samples/bliss.png`, runs both passes and writes
+  loads the model, attaches `public/samples/bliss.png`, runs both passes and writes
   `e2e/out/summary.json` plus screenshots. It is the same path a person clicks, with no native
   code involved. It uses Edge on Windows and the bundled Chromium elsewhere
   (`npx playwright install chromium` once, or pass `--browser chrome`).
@@ -168,13 +180,15 @@ src/                    the page (React + TypeScript)
   lib/schema.ts         compact field specs <-> JSON Schema, validation
   lib/multimodal.ts     image downscale + re-encode
   lib/runs.ts           the decision and generation calls
-  lib/presets.ts        example questions
+  lib/presets.ts        example questions (three fields each, a start and never a limit)
+  lib/samples.ts        the sample evidence offered in 01 / evidence
   lib/motion.ts         the pointer tilt, transform-only and off for reduced motion
   components/Scene.tsx  the painted sky, clouds and ridges behind the instrument
   components/Island.tsx the floating island in the setup stage
   assets/fonts/         Fraunces and Nunito Sans, vendored (see assets/fonts/README.md)
 lib/wllama/             the wasm library: fork source + prebuilt wllama.wasm (see PROVENANCE.md)
-samples/bliss.png       a small image to try it with
+public/samples/         the sample evidence: complaint emails and product screenshots
+e2e/make-samples.mjs    renders those screenshots (node e2e/make-samples.mjs)
 e2e/decision-smoke.mjs  headless end-to-end run (npm run smoke)
 e2e/bench-decision.mjs  cold vs warm decision timings (npm run bench)
 e2e/ui-shots.mjs        UI screenshots and rendered-contrast checks (npm run shots)

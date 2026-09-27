@@ -9,6 +9,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "smoke": "node e2e/decision-smoke.mjs",
+    "samples": "node e2e/make-samples.mjs",
+    "check-evidence": "node e2e/check-evidence.mjs",
     "bench": "node e2e/bench-decision.mjs",
     "shots": "node e2e/ui-shots.mjs"
   },

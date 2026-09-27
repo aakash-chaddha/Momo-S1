@@ -32,6 +32,7 @@ import { Island } from './components/Island';
 import { Scene } from './components/Scene';
 import { QuestionPanel } from './components/QuestionPanel';
 import { DecisionPanel, GenerationPanel } from './components/RunPanels';
+import { ComparePanel } from './components/ComparePanel';
 import { RawJson } from './components/RawJson';
 import { Cell, Readout, sec } from './components/Readout';
 import { StageRail, type StageRow } from './components/StageRail';
@@ -62,6 +63,8 @@ interface Fixture {
   decision?: DecisionRun;
   generation?: GenerationRun;
   image?: string;
+  // the request the recorded run was made with: the page then shows the run it depicts
+  request?: { instructions?: string; schema?: Json; context?: string };
 }
 
 function readFixture(): Fixture | null {
@@ -81,12 +84,15 @@ export default function App() {
   const [loadError, setLoadError] = useState('');
   const [info, setInfo] = useState<LoadedContextInfo | null>(FIXTURE?.info ?? null);
 
-  const [instructions, setInstructions] = useState(DEFAULT_PRESET.instructions);
-  const [schemaText, setSchemaText] = useState(() =>
-    JSON.stringify(DEFAULT_PRESET.schema, null, 2)
+  const [instructions, setInstructions] = useState(
+    FIXTURE?.request?.instructions ?? DEFAULT_PRESET.instructions
   );
-  const [context, setContext] = useState(DEFAULT_PRESET.context);
-  const [images, setImages] = useState<PreparedImage[]>([]);
+  const [schemaText, setSchemaText] = useState(() =>
+    JSON.stringify(FIXTURE?.request?.schema ?? DEFAULT_PRESET.schema, null, 2)
+  );
+  const [context, setContext] = useState(FIXTURE?.request?.context ?? DEFAULT_PRESET.context);
+  const [presetId, setPresetId] = useState(DEFAULT_PRESET.id);
+  const [image, setImage] = useState<PreparedImage | null>(null);
 
   const [decision, setDecision] = useState<DecisionRun>(FIXTURE?.decision ?? idleDecisionRun);
   const [generation, setGeneration] = useState<GenerationRun>(
@@ -98,7 +104,7 @@ export default function App() {
   const abortRef = useRef<AbortController | null>(null);
 
   const model = MODELS.find((m) => m.id === modelId) ?? DEFAULT_MODEL;
-  const live = images.filter((i) => !i.error);
+  const live = image && !image.error ? image : null;
 
   const schemaObj = useMemo<Json | null>(() => {
     try {
@@ -141,7 +147,7 @@ export default function App() {
   }, [schemaObj]);
 
   const busy = decision.running || generation.running;
-  const contextsReady = live.length > 0 || context.trim().length > 0;
+  const contextsReady = !!live || context.trim().length > 0;
   const canRun = phase === 'ready' && !busy && !schemaProblem && contextsReady;
 
   // ----- fixture seeding (dev only, and only under ?fixture) -----
@@ -153,7 +159,7 @@ export default function App() {
       const blob = await (await fetch(url)).blob();
       const file = new File([blob], url.split('/').pop() ?? 'sample.png', { type: blob.type });
       const prepared = await prepareImage(file, MAX_IMAGE_EDGE);
-      if (!cancelled) setImages([prepared]);
+      if (!cancelled) setImage(prepared);
     })().catch(() => undefined);
     return () => {
       cancelled = true;
@@ -225,18 +231,23 @@ export default function App() {
     [modelId]
   );
 
-  const addImages = useCallback(async (files: File[]) => {
-    const prepared = await Promise.all(files.map((f) => prepareImage(f, MAX_IMAGE_EDGE)));
-    setImages((prev) => [...prev, ...prepared]);
+  // one image only: adding another replaces the one that is there, and the same image twice
+  // (a second click on a sample, a repeated paste) is a no-op instead of a second context
+  const addImage = useCallback(async (file: File) => {
+    const prepared = await prepareImage(file, MAX_IMAGE_EDGE);
+    setImage((prev) =>
+      prev && prev.name === prepared.name && prev.size === prepared.size ? prev : prepared
+    );
   }, []);
 
-  const removeImage = useCallback((id: string) => {
-    setImages((prev) => prev.filter((i) => i.id !== id));
+  const removeImage = useCallback(() => {
+    setImage(null);
   }, []);
 
   const applyPreset = useCallback((id: string) => {
     const preset = PRESETS.find((p) => p.id === id);
     if (!preset) return;
+    setPresetId(preset.id);
     setInstructions(preset.instructions);
     setSchemaText(JSON.stringify(preset.schema, null, 2));
     setContext(preset.context);
@@ -244,13 +255,10 @@ export default function App() {
 
   const buildContexts = useCallback((): DecisionRequest['contexts'] => {
     const text = context.trim();
-    if (!live.length) return [text];
-    return live.map((img) => {
-      const parts: DecisionContentPart[] = [];
-      if (text) parts.push({ type: 'text', text });
-      parts.push({ type: 'image_url', image_url: { url: img.url } });
-      return parts;
-    });
+    const parts: DecisionContentPart[] = [];
+    if (text) parts.push({ type: 'text', text });
+    if (live) parts.push({ type: 'image_url', image_url: { url: live.url } });
+    return parts.length ? [parts] : [text];
   }, [context, live]);
 
   const cancel = useCallback(() => {
@@ -259,7 +267,7 @@ export default function App() {
 
   const startDecision = useCallback(async () => {
     const w = wllamaRef.current;
-    if (!w || !schemaObj) return;
+    if (!w || !schemaObj) return false;
     const body: DecisionRequest = {
       instructions,
       schema: schemaObj,
@@ -289,6 +297,7 @@ export default function App() {
         request: body,
       });
       setDecisionIndex(0);
+      return true;
     } catch (e) {
       const aborted = ctrl.signal.aborted;
       setDecision({
@@ -297,6 +306,7 @@ export default function App() {
         error: aborted ? '' : (e as Error)?.message || String(e),
         request: body,
       });
+      return false;
     } finally {
       abortRef.current = null;
     }
@@ -310,7 +320,7 @@ export default function App() {
       instructions,
       schema: schemaObj,
       contexts,
-      images: live.length ? live.map((img) => img.bytes) : contexts.map(() => null),
+      images: contexts.map(() => (live ? live.bytes : null)),
     };
     const ctrl = new AbortController();
     abortRef.current = ctrl;
@@ -350,9 +360,15 @@ export default function App() {
     }
   }, [buildContexts, instructions, live, schemaObj]);
 
+  // one press, both answers: the pass first, then the generation, so the comparison below is
+  // always made from a pair that ran back to back on the same question
+  const runBoth = useCallback(async () => {
+    if (await startDecision()) await startGeneration();
+  }, [startDecision, startGeneration]);
+
   // ----- render -----
 
-  const preset = PRESETS.find((p) => p.id === DEFAULT_PRESET.id);
+  const preset = PRESETS.find((p) => p.id === presetId);
   const decisionWallMs = decision.response ? decision.wallMs : null;
   const generationTotalMs = generation.answers.length
     ? generation.answers.reduce((a, b) => a + b.wallMs, 0)
@@ -380,11 +396,9 @@ export default function App() {
         id: 'stage-01',
         num: '01',
         name: 'evidence',
-        state: live.length ? 'ok' : 'idle',
-        note: live.length
-          ? `${live.length} image${live.length === 1 ? '' : 's'}${
-              context.trim() ? ' + text' : ''
-            }`
+        state: live ? 'ok' : 'idle',
+        note: live
+          ? `image${context.trim() ? ' + text' : ''}`
           : context.trim()
             ? 'text only'
             : 'empty',
@@ -426,6 +440,13 @@ export default function App() {
             ? `${sec(generationTotalMs) ?? ''}${ratio ? ` · ${ratio.toFixed(1)}×` : ''}`
             : 'not run',
       },
+      {
+        id: 'stage-05',
+        num: '05',
+        name: 'side by side',
+        state: ratio ? 'ok' : 'idle',
+        note: ratio ? `${ratio.toFixed(1)}× gen / pass` : 'run both to compare',
+      },
     ],
     [
       context,
@@ -437,7 +458,7 @@ export default function App() {
       generation.error,
       generation.running,
       generationTotalMs,
-      live.length,
+      live,
       loadError,
       model.name,
       phase,
@@ -719,8 +740,8 @@ export default function App() {
               <span className="stage-note">what the model gets to look at</span>
             </div>
             <EvidencePanel
-              images={images}
-              onAdd={addImages}
+              image={image}
+              onAdd={addImage}
               onRemove={removeImage}
               context={context}
               setContext={setContext}
@@ -789,7 +810,6 @@ export default function App() {
               onRun={startGeneration}
               onCancel={cancel}
               canRun={canRun}
-              decisionWallMs={decisionWallMs}
             />
             {generation.answers.length > 0 && schemaObj ? (
               <RawJson
@@ -799,13 +819,29 @@ export default function App() {
                     instructions,
                     schema: schemaObj,
                     contexts: buildContexts(),
-                    images: live.map((img) => img.bytes),
+                    images: [live ? live.bytes : null],
                   },
                   0
                 )}
                 filename="momo-s1-generation-request.json"
               />
             ) : null}
+          </section>
+
+          {/* ------------------------------------------------ 05 side by side */}
+          <section className="stage" id="stage-05">
+            <div className="stage-head">
+              <span className="stage-num">05</span>
+              <h2>side by side</h2>
+              <span className="stage-note">both answers on the same fields, and both wall times</span>
+            </div>
+            <ComparePanel
+              decision={decision}
+              generation={generation}
+              onRunBoth={runBoth}
+              canRun={canRun}
+              busy={busy}
+            />
           </section>
 
           <NativeHandoff model={model} />

@@ -16,7 +16,7 @@ const showLogs = process.argv.includes('--logs');
 const queryArg = process.argv.indexOf('--query');
 const QUERY = queryArg >= 0 ? process.argv[queryArg + 1] : '';
 const imageArg = process.argv.indexOf('--image');
-const IMAGE = imageArg >= 0 ? path.resolve(process.argv[imageArg + 1]) : path.join(ROOT, 'samples/bliss.png');
+const IMAGE = imageArg >= 0 ? path.resolve(process.argv[imageArg + 1]) : path.join(ROOT, 'public/samples/bliss.png');
 const PORT = 4319;
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.wasm': 'application/wasm', '.png': 'image/png' };
 

@@ -228,23 +228,18 @@ export function GenerationPanel({
   onRun,
   onCancel,
   canRun,
-  decisionWallMs,
 }: {
   run: GenerationRun;
   onRun: () => void;
   onCancel: () => void;
   canRun: boolean;
-  decisionWallMs: number | null;
 }) {
-  const total = run.answers.reduce((a, b) => a + b.wallMs, 0);
-  const ratio = decisionWallMs && total && run.answers.length ? total / decisionWallMs : null;
-
   return (
     <>
       <p className="lede">
         The same image and the same schema, asked again as a JSON-constrained completion and
         streamed token by token. The two runs are sequential and share no state, so the comparison
-        is between measured wall times on your machine, not a claim.
+        in the next stage is between measured wall times on your machine, not a claim.
       </p>
 
       <div className="row" style={{ marginBottom: 'var(--s-4)' }}>
@@ -294,21 +289,6 @@ export function GenerationPanel({
           <pre>{a.text || '(empty)'}</pre>
         </div>
       ))}
-
-      {ratio ? (
-        <div className="ratio">
-          <span className="ratio-num">{ratio.toFixed(1)}×</span>
-          <span className="ratio-note">
-            {ratio >= 1
-              ? 'generating the same answer took this many times longer than deciding it in one pass'
-              : 'generation was faster than the one pass on this run'}
-            {': '}
-            {sec(decisionWallMs!)} for the pass against {sec(total)} for{' '}
-            {run.answers.length} completion{run.answers.length === 1 ? '' : 's'}, both measured with
-            performance.now() on this device.
-          </span>
-        </div>
-      ) : null}
     </>
   );
 }

@@ -21,7 +21,7 @@ import { chromium } from 'playwright';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
 const imageArg = process.argv.indexOf('--image');
-const IMAGE = imageArg >= 0 ? path.resolve(process.argv[imageArg + 1]) : path.resolve(ROOT, 'samples/bliss.png');
+const IMAGE = imageArg >= 0 ? path.resolve(process.argv[imageArg + 1]) : path.resolve(ROOT, 'public/samples/bliss.png');
 const OUT = path.join(ROOT, 'e2e', 'out');
 const PORT = 4319;
 

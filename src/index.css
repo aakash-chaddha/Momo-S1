@@ -1363,6 +1363,73 @@ label.inline {
   object-fit: cover;
   background: var(--surface-3);
 }
+
+/* the thumb is a crop; this opens the pixels at their own size */
+.thumb-open {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: var(--surface-3);
+  cursor: zoom-in;
+}
+.thumb-open-label {
+  position: absolute;
+  right: var(--s-2);
+  bottom: var(--s-2);
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: rgba(253, 250, 242, 0.92);
+  border: 1px solid var(--line-2);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 160ms var(--ease-out);
+}
+.thumb-open:hover .thumb-open-label,
+.thumb-open:focus-visible .thumb-open-label {
+  opacity: 1;
+}
+
+/* the image at its own size, on a dimmed page */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-5);
+  background: rgba(34, 48, 31, 0.62);
+}
+.lightbox-plate {
+  margin: 0;
+  max-width: min(1120px, 94vw);
+  border: 1px solid var(--line-panel);
+  border-radius: var(--r-3);
+  background: var(--surface);
+  box-shadow: var(--e3);
+  overflow: hidden;
+}
+.lightbox-plate img {
+  display: block;
+  max-width: min(1120px, 94vw);
+  max-height: 78vh;
+  object-fit: contain;
+  background: var(--surface-2);
+}
+.lightbox-plate figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-2) var(--s-3);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+}
 .thumb .meta {
   padding: var(--s-2) var(--s-3);
   font-family: var(--font-mono);
@@ -1377,6 +1444,87 @@ label.inline {
   padding: 2px 8px;
   font-size: 10.5px;
   width: 100%;
+}
+
+/* the sample strip: small printouts of other people's screens, pinned in a row */
+.samples {
+  margin-bottom: var(--s-4);
+}
+.samples .panel-key {
+  margin-bottom: 0;
+}
+.sample-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+  gap: var(--s-3);
+}
+.sample {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  height: 100%;
+  padding: var(--s-2);
+  border: 1px solid var(--line-panel);
+  border-radius: var(--r-2);
+  background: var(--surface);
+}
+.sample-open {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--r-2) - 4px);
+  overflow: hidden;
+  background: var(--surface-3);
+  cursor: zoom-in;
+}
+.sample-open:disabled {
+  cursor: default;
+}
+.sample-open img {
+  display: block;
+  width: 100%;
+  height: 92px;
+  object-fit: cover;
+  object-position: top;
+}
+.sample-add {
+  margin-top: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    border-color 160ms var(--ease-out),
+    background-color 160ms var(--ease-out),
+    scale 120ms var(--ease-out);
+}
+.sample-add:hover:not(:disabled) {
+  border-color: var(--line-3);
+  background: var(--surface-3);
+}
+.sample-add:active:not(:disabled) {
+  scale: 0.98;
+}
+.sample-add:disabled {
+  cursor: default;
+  color: var(--ink-faint);
+}
+.sample-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink);
+}
+.sample-caption {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--ink-faint);
 }
 
 /* ==========================================================================
@@ -1906,6 +2054,108 @@ button.lane[data-hot='true'] {
 }
 
 /* ==========================================================================
+   05 side by side: two clocks and two answers on one sheet
+   ========================================================================== */
+
+.race {
+  margin: 0 0 var(--s-4);
+  display: grid;
+  gap: var(--s-2);
+}
+.race-row {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr) 76px;
+  align-items: center;
+  gap: var(--s-3);
+}
+.race-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+.race-track {
+  height: 16px;
+  border-radius: var(--r-1);
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.race-fill {
+  height: 100%;
+  width: calc(var(--w) * 100%);
+  min-width: 3px;
+  border-radius: var(--r-1);
+}
+.race-fill[data-kind='pass'] {
+  background: color-mix(in srgb, var(--accent) 55%, var(--surface-3));
+}
+.race-fill[data-kind='gen'] {
+  background: color-mix(in srgb, var(--warn) 55%, var(--surface-3));
+}
+.race-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the two answers on the same fields: the row is the unit, the match column is the reading */
+.cmp-table {
+  margin-top: var(--s-4);
+  border: 1px solid var(--line-panel);
+  border-radius: var(--r-2);
+  overflow: hidden;
+  background: var(--surface);
+}
+.cmp-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.2fr) 84px;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  align-items: baseline;
+}
+.cmp-row + .cmp-row {
+  border-top: 1px solid var(--line);
+}
+.cmp-head {
+  background: var(--surface-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.cmp-name {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink);
+}
+.cmp-val {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  word-break: break-word;
+}
+.cmp-val small {
+  display: block;
+  font-size: 10px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+.cmp-mark {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-align: right;
+  color: var(--ink-faint);
+}
+.cmp-mark[data-ok='true'] {
+  color: var(--ok);
+}
+.cmp-mark[data-ok='false'] {
+  color: var(--bad);
+}
+
+/* ==========================================================================
    json payloads
    ========================================================================== */
 
@@ -2354,6 +2604,41 @@ pre {
   }
   .ratio .ratio-num {
     font-size: 28px;
+  }
+  .race-row {
+    grid-template-columns: 92px minmax(0, 1fr) 66px;
+    gap: var(--s-2);
+  }
+  .cmp-head {
+    display: none;
+  }
+  .cmp-row {
+    grid-template-columns: minmax(0, 1fr) 76px;
+    grid-template-areas:
+      'name mark'
+      'pass pass'
+      'gen gen';
+    row-gap: 2px;
+  }
+  .cmp-name {
+    grid-area: name;
+  }
+  .cmp-mark {
+    grid-area: mark;
+  }
+  .cmp-val[data-col='pass'] {
+    grid-area: pass;
+  }
+  .cmp-val[data-col='gen'] {
+    grid-area: gen;
+  }
+  .cmp-val[data-col='pass']::before {
+    content: 'one pass · ';
+    color: var(--ink-faint);
+  }
+  .cmp-val[data-col='gen']::before {
+    content: 'token by token · ';
+    color: var(--ink-faint);
   }
   .thumb img {
     height: 150px;
