@@ -7,7 +7,7 @@ PRs in either repository; everything below is working-tree state.
 
 | piece | location |
 |---|---|
-| the page | `F:/lab/jev/Momos-1/` (standalone release repo; the page had been developed in `wllama/examples/momos-one/`) |
+| the page | `F:/lab/jev/Momo-S1/` (standalone release repo; the page had been developed in `wllama/examples/momos-one/`) |
 | the library API | `wllama.createDecision(body)` in `F:/lab/jev/wllama/src/wllama.ts`, types in `src/types/types.ts` |
 | the glue action | `cpp/glue.hpp` (`decs_req` / `decs_res`, `n_seq_decision`), `cpp/wllama-context.h` (`action_decision`), `cpp/wllama.cpp` |
 | the engine | pinned fork `89f5c5d27` (the `wllama/llama.cpp` submodule) + the `candidates` patch; the shipped wasm is prebuilt, see `lib/wllama/PROVENANCE.md` |
@@ -17,7 +17,7 @@ PRs in either repository; everything below is working-tree state.
 
 ## Decisions taken (the plan's open questions, D1-D6)
 
-- **D1** - the page was developed in `wllama/examples/momos-one/` and then moved to the standalone release repo `F:/lab/jev/Momos-1/` on request: one repo, the prebuilt wasm,
+- **D1** - the page was developed in `wllama/examples/momos-one/` and then moved to the standalone release repo `F:/lab/jev/Momo-S1/` on request: one repo, the prebuilt wasm,
   the page compiles the library straight from `../../src` (vite alias + tsconfig path), so no built
   `@wllama/wllama` package is needed.
 - **D2** - option **A**: the submodule is pointed at the fork and `decision-engine.cpp` is added to
@@ -82,7 +82,7 @@ including the engine's own `--decision-seqs` message).
 
 ## Release packaging (added after the first draft)
 
-- The project now lives in `F:/lab/jev/Momos-1/` as a standalone repository: the page, the e2e
+- The project now lives in `F:/lab/jev/Momo-S1/` as a standalone repository: the page, the e2e
   runner, `samples/bliss.png`, the docs and screenshots, and a vendored copy of the library in
   `lib/wllama/src` (fork source + the prebuilt `wllama.wasm`). `npm install && npm run dev` works
   without the wllama fork, the llama.cpp fork or emscripten; `lib/wllama/PROVENANCE.md` records the
@@ -90,3 +90,29 @@ including the engine's own `--decision-seqs` message).
 - The weights used by the optional native parity check live in `models/` (gitignored).
 - `wllama/examples/momos-one` was removed from the fork. The fork keeps the library API, the glue
   action, the engine pin and `src/decision.test.ts`; its README points at this repository.
+
+## UI refresh (added after the release packaging)
+
+The page was rebuilt as a working surface rather than a styled document: the five stages became an
+instrument with a stage rail for navigation, a bottom status bar carrying real telemetry, one
+graphic per stage, and a bespoke diagram for the one pass. The design reasoning (grammar choice,
+feeling curve, signature move, fingerprint row) is recorded in `scrollcraft/builds/momos-one-ui/BRIEF.md`
+alongside this repository; the summary that matters here:
+
+- **Signature move: the fork rail.** Stage 03 draws the pass from the response's own numbers: the
+  shared prefix once, then one lane per field, each lane a stacked distribution over its allowed
+  values, all resolving on a single sweep because they resolve in a single decode. A lane and its
+  field row highlight each other, and each lane is a real button, so the diagram is navigable by
+  keyboard and readable by a screen reader.
+- **Depth without photography.** This world has no images to grade or parallax, so depth comes from
+  elevation, edge light and overlap (the live control panel overlaps the readout beside it).
+- **The palette was rebuilt around three line roles and three ink roles.** Previously one grey did
+  the job of a row separator, a control border and a hover state, which put every input border at
+  1.6:1 and every small label at 4.54:1. Row separators, panel frames and control borders are now
+  three different values, and control borders clear 3:1 (WCAG 1.4.11) on the render.
+- **Verified, not asserted.** `npm run shots` screenshots every stage at three widths in both the
+  empty and populated states, and measures contrast on the composited pixels of every line of text
+  at every scroll position, with the styled pair as an independent cross-check. Details in
+  `e2e/out/ui/summary.json`; the procedure is in the README.
+- **Screenshots are now WebP.** A grained dark page is a large PNG, and three of them are in the
+  README: the same frames are about a twelfth of the size as WebP.

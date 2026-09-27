@@ -164,6 +164,9 @@ async function main() {
       isolated,
       hardwareConcurrency: await page.evaluate(() => navigator.hardwareConcurrency),
       loadedInfo: { n_ctx: info.n_ctx, n_ubatch: info.n_ubatch, model: info.metadata['general.name'] },
+      // the whole object, so later UI work can be verified against a recorded load without
+      // downloading 307 MiB again (see e2e/ui-shots.mjs and ?fixture in src/App.tsx)
+      info,
       decision: {
         request: decision.request,
         timings: decision.response.timings,

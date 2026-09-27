@@ -25,18 +25,26 @@ Engine (C++, in the fork, not in this directory; compiled into the wasm binary):
   cache.
 - `cpp/wllama.cpp` - the `decision` action dispatch.
 
-Fork pin: `llama.cpp` at `89f5c5d27` (`parallel-decision-media` branch, thecodacus/llama.cpp fork) plus:
+Fork pin: `llama.cpp` at `cd9c4acdd` (`parallel-decision-media` branch of
+`https://github.com/aakash-chaddha/llama.cpp`, a public fork of thecodacus/llama.cpp's
+parallel-decision work). The pin is the whole build state - the decision engine, the media work and
+the candidates patch are all committed in it; nothing is patched on top. On top of thecodacus's
+base (`b9244f893`, `14d04e755`) it adds:
 
-- `scripts/patches/0001-decision-candidates.patch` - adds the `candidates` list to a scored field
-  in `tools/parallel-decision/decision-engine.cpp`.
-- the fork's in-progress media cut (cut 3), taken from its working tree: `common/common.h`,
-  `common/arg.cpp` and `tools/server/server-context.cpp`. It adds the **decision media encoder
-  cache** (the embeddings of an image are encoded once per session and reused by later decisions on
-  the same bytes), audio parts and several images per context. The encoder cache is what makes a
-  repeated decision on the same image skip the vision encode; it is on by default.
-  `server-context.cpp` also carries a local fix on top of the cut: media is encoded **before** the
-  engine starts decoding, not lazily from inside its decode loop, because the two graphs must not
-  run on the same backend at once (the WebGPU backend is asynchronous).
+- `cbb875cd6`, `89f5c5d27` - the media groundwork: segmented contexts, a media decode callback and
+  image contexts.
+- `56fd6b575` - media parts in `/v1/decision` contexts: a context is a string, or an array of
+  content parts - any number of text parts plus `image_url` and `input_audio` parts (base64 data
+  URLs), several images per context.
+- `bfa108a74` - the `candidates` patch (recorded as `scripts/patches/0001-decision-candidates.patch`
+  in the wllama fork): a scored field carries a full distribution over its allowed values.
+- `cd9c4acdd` - the **decision media encoder cache** (the embeddings of a media file are encoded
+  once per session and reused by later decisions on the same bytes; this is what makes a repeated
+  decision on the same image skip the vision encode. On by default: `--decision-media-cache` /
+  `--no-decision-media-cache`, per request with `"cache_media": false`) and the encode-before-decode
+  ordering: media is encoded **before** the engine starts decoding, not lazily from inside its
+  decode loop, because the two graphs must not run on the same backend at once (the WebGPU backend
+  is asynchronous).
 
 ## How to rebuild the wasm
 
@@ -46,14 +54,8 @@ The prebuilt binary is `src/wasm/wllama.wasm` (8.7 MB, memory64 + JSPI + WebGPU,
 ```bash
 git clone https://github.com/aakash-chaddha/wllama
 cd wllama
-# the fork commit is not on a public remote yet: clone the local llama.cpp working copy,
-# which already contains the engine patch and cut 3
-git clone /path/to/llama.cpp llama.cpp
-git -C llama.cpp checkout 89f5c5d27
-# from the fork working tree: the candidates patch and the cut-3 sources
-cp /path/to/llama.cpp/tools/parallel-decision/decision-engine.cpp llama.cpp/tools/parallel-decision/
-cp /path/to/llama.cpp/common/{common.h,arg.cpp} llama.cpp/common/
-cp /path/to/llama.cpp/tools/server/server-context.cpp llama.cpp/tools/server/
+git clone https://github.com/aakash-chaddha/llama.cpp.git llama.cpp
+git -C llama.cpp checkout cd9c4acdd   # the pin carries everything; no source copying needed
 
 SKIP_COMPAT=1 ./scripts/build_wasm.sh     # docker + emsdk, writes src/wasm/wllama.wasm + wllama.js
 bash scripts/build_worker.sh              # embeds the new wasm glue into src/workers-code/generated.ts
@@ -62,7 +64,7 @@ bash scripts/build_worker.sh              # embeds the new wasm glue into src/wo
 Then refresh this copy:
 
 ```bash
-cp wllama/src/wasm/{wllama.wasm,wllama.js,source-map.ts} Momos-1/lib/wllama/src/wasm/
+cp wllama/src/wasm/{wllama.wasm,wllama.js,source-map.ts} Momo-S1/lib/wllama/src/wasm/
 cp wllama/src/{wllama.ts,types/types.ts,glue/messages.ts,workers-code/generated.ts} ...   # the TS side
 ```
 

@@ -4,6 +4,7 @@ import {
   serializeForm,
   summary,
   validateSchema,
+  valueCount,
   TYPES,
   type FieldType,
   type FormField,
@@ -59,6 +60,17 @@ export function QuestionPanel({
   const problem = !schemaObj
     ? 'the schema is not a JSON object'
     : validateSchema(schemaObj);
+
+  // the total the pass has to score, so the reader can see the cost before spending it
+  const totalValues = form
+    ? form.fields.reduce((a, f) => {
+        const n = valueCount(f);
+        return a + (Number.isFinite(n) ? n : 0);
+      }, 0)
+    : 0;
+  const fieldCount = schemaObj
+    ? Object.keys((schemaObj.properties as Json) ?? schemaObj).length
+    : 0;
 
   const commit = (next: FormSchema) => {
     setForm(next);
@@ -128,33 +140,36 @@ export function QuestionPanel({
         <textarea
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
-          rows={6}
+          rows={9}
           disabled={disabled}
           placeholder="e.g. kind: the main subject of the image. count: how many…"
         />
       </label>
 
-      <div className="row" style={{ marginBottom: 8 }}>
-        <strong style={{ fontSize: 13 }}>schema</strong>
-        <button
-          type="button"
-          className={mode === 'form' ? 'primary' : 'ghost'}
-          onClick={() => setMode('form')}
-          disabled={disabled}
-        >
-          form
-        </button>
-        <button
-          type="button"
-          className={mode === 'json' ? 'primary' : 'ghost'}
-          onClick={() => setMode('json')}
-          disabled={disabled}
-        >
-          JSON
-        </button>
+      <div className="row" style={{ marginBottom: 'var(--s-3)' }}>
+        <div className="tabs" role="group" aria-label="schema view">
+          <button
+            type="button"
+            aria-pressed={mode === 'form'}
+            onClick={() => setMode('form')}
+            disabled={disabled}
+          >
+            form
+          </button>
+          <button
+            type="button"
+            aria-pressed={mode === 'json'}
+            onClick={() => setMode('json')}
+            disabled={disabled}
+          >
+            JSON
+          </button>
+        </div>
         <span className="spacer" />
-        <span className="status">
-          {schemaObj ? `${Object.keys((schemaObj.properties as Json) ?? schemaObj).length} fields` : '—'}
+        <span className="status tnum">
+          {schemaObj
+            ? `${fieldCount} fields · ${totalValues} value${totalValues === 1 ? '' : 's'} to score`
+            : 'the schema is unreadable'}
         </span>
       </div>
 
@@ -167,22 +182,25 @@ export function QuestionPanel({
           rows={16}
           disabled={disabled}
           spellCheck={false}
+          aria-label="schema JSON"
         />
       ) : (
         form && (
           <>
-            {form.fields.map((f, i) => {
-              const s = summary(f);
-              return (
-                <div className="fieldrow" key={i}>
-                  <div className="head">
-                    <input
-                      className="name"
-                      value={f.name}
-                      onChange={(e) => edit(i, { name: e.target.value })}
-                      disabled={disabled}
-                      aria-label="field name"
-                    />
+            <div className="schema-list">
+              {form.fields.map((f, i) => {
+                const s = summary(f);
+                return (
+                  <div className="schema-row" key={i}>
+                    <div className="head">
+                      <span className="idx tnum">{String(i + 1).padStart(2, '0')}</span>
+                      <input
+                        className="name"
+                        value={f.name}
+                        onChange={(e) => edit(i, { name: e.target.value })}
+                        disabled={disabled}
+                        aria-label="field name"
+                      />
                     <select
                       value={f.type}
                       onChange={(e) =>
@@ -216,7 +234,7 @@ export function QuestionPanel({
                     <span className="spacer" />
                     <button
                       type="button"
-                      className="danger"
+                      className="danger quiet"
                       onClick={() => remove(i)}
                       disabled={disabled}
                     >
@@ -229,10 +247,11 @@ export function QuestionPanel({
                     placeholder="what this field means; your words steer the answer"
                     rows={2}
                     disabled={disabled}
+                    aria-label={`description for ${f.name || `field ${i + 1}`}`}
                   />
                   {f.type === 'enum' && (
                     <input
-                      style={{ width: '100%', marginTop: 6 }}
+                      style={{ width: '100%', marginTop: 'var(--s-2)' }}
                       value={f.choices.join(', ')}
                       onChange={(e) =>
                         edit(i, {
@@ -248,7 +267,7 @@ export function QuestionPanel({
                     />
                   )}
                   {(f.type === 'integer' || f.type === 'number') && (
-                    <div className="row" style={{ marginTop: 6 }}>
+                    <div className="row" style={{ marginTop: 'var(--s-2)' }}>
                       <label className="inline">
                         min
                         <input
@@ -290,10 +309,11 @@ export function QuestionPanel({
                     </div>
                   )}
                   <div className={`hint${s.bad ? ' bad' : ''}`}>{s.text}</div>
-                </div>
-              );
-            })}
-            <button type="button" onClick={add} disabled={disabled}>
+                  </div>
+                );
+              })}
+            </div>
+            <button type="button" className="ghost" onClick={add} disabled={disabled}>
               + add field
             </button>
           </>

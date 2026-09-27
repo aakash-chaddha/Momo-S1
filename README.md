@@ -1,4 +1,4 @@
-# Momos-1
+# Momo-S1
 
 **momos-one — multimodal system-1 in your browser.** Give it an image and a finite question; it
 answers the whole schema in **one batched forward pass** and returns a probability for every field.
@@ -6,7 +6,7 @@ Then it asks the same question token by token, so you can compare the two on you
 
 No backend, no upload, no API key. The model and the engine both run in the browser.
 
-![The decision section: engine timings, the assembled JSON and per-field probability bars](docs/img/02-decision.png)
+![The one pass section: the fork rail, the engine's time split and the per-field distributions](docs/img/02-decision.webp)
 
 ## Try it in two minutes
 
@@ -110,6 +110,12 @@ Section **03** shows both the request and the response JSON, with copy and downl
   `e2e/out/summary.json` plus screenshots. It is the same path a person clicks, with no native
   code involved. It uses Edge on Windows and the bundled Chromium elsewhere
   (`npx playwright install chromium` once, or pass `--browser chrome`).
+- **The UI run, which needs no model.** `npm run shots` starts its own dev server, screenshots
+  every stage at 1280px, 390px and 360px, in the empty state and against a recorded response, and
+  writes a report to `e2e/out/ui/`. It measures contrast on the composited pixels of every line of
+  text at every scroll position, checks for horizontal overflow, walks the tab order for a visible
+  focus ring, and re-checks the reduced-motion composition. `--update-docs` also refreshes the
+  three screenshots above (as WebP; it needs ffmpeg on the path).
 
 ## Deploy it
 
@@ -124,6 +130,27 @@ Cross-Origin-Embedder-Policy: require-corp
 `npm run preview` serves `dist/` with those headers. Netlify, Vercel, Cloudflare Pages and Hugging
 Face Spaces can set them; GitHub Pages cannot, so there the page falls back to a single thread and
 still works, just slower.
+
+### Run the built site with no Node
+
+Any static file server works for a quick look. Python only:
+
+```bash
+cd dist
+python -m http.server 4173
+```
+
+Then open <http://localhost:4173/index.html>.
+
+On Windows you can open the browser in the same step:
+
+```cmd
+cd /d F:\lab\jev\Momo-S1\dist && start http://localhost:4173/index.html && python -m http.server 4173
+```
+
+Do not open `index.html` over `file://`: the wasm build needs HTTP to load. A plain file server does
+not send the COOP/COEP headers above, so the engine falls back to a single thread — slower, still
+correct. Use `npm run preview` when you want the multithreaded path.
 
 ## Honesty about the model
 
@@ -142,10 +169,15 @@ src/                    the page (React + TypeScript)
   lib/multimodal.ts     image downscale + re-encode
   lib/runs.ts           the decision and generation calls
   lib/presets.ts        example questions
+  lib/motion.ts         the pointer tilt, transform-only and off for reduced motion
+  components/Scene.tsx  the painted sky, clouds and ridges behind the instrument
+  components/Island.tsx the floating island in the setup stage
+  assets/fonts/         Fraunces and Nunito Sans, vendored (see assets/fonts/README.md)
 lib/wllama/             the wasm library: fork source + prebuilt wllama.wasm (see PROVENANCE.md)
 samples/bliss.png       a small image to try it with
 e2e/decision-smoke.mjs  headless end-to-end run (npm run smoke)
 e2e/bench-decision.mjs  cold vs warm decision timings (npm run bench)
+e2e/ui-shots.mjs        UI screenshots and rendered-contrast checks (npm run shots)
 docs/                   plan, spec, implementation report, parity evidence, screenshots
 ```
 
@@ -155,6 +187,8 @@ docs/                   plan, spec, implementation report, parity evidence, scre
   **identical decisions**, every probability within 1.0 pp, identical token accounting
   (`docs/parity-*.json` are the raw bodies).
 - `docs/evidence-smoke.json` - the numbers of the last smoke run (timings, tokens, scored rows).
+- `e2e/out/ui/summary.json` - the last UI run: every measured text line, the pixel-measured
+  contrast ratio and the styled one, layout overflow, focus order and console errors.
 - The library's decision API is covered by browser tests in the wllama fork
   (`src/decision.test.ts`): one result per context with every value on-schema, distribution
   consistency, usage/timing accounting, prefix-cache stability, and the error taxonomy.
@@ -175,6 +209,11 @@ docs/                   plan, spec, implementation report, parity evidence, scre
 the `candidates` patch and the media encoder cache (see `lib/wllama/PROVENANCE.md`).
 Model weights are used under the terms of their Hugging Face repositories
 ([`LiquidAI/LFM2.5-VL-450M-GGUF`](https://huggingface.co/LiquidAI/LFM2.5-VL-450M-GGUF)).
+Type is [Fraunces](https://github.com/undercasetype/Fraunces) and
+[Nunito Sans](https://github.com/googlefonts/nunito), both SIL Open Font License 1.1, vendored
+into `src/assets/fonts/` so the page still asks for nothing after the weights are cached.
 
 Found a bug? Open an issue in this repository; for the library or the engine, the forks are
-`aakash-chaddha/wllama` and `thecodacus/llama.cpp`.
+[`aakash-chaddha/wllama`](https://github.com/aakash-chaddha/wllama) (the wasm library) and
+[`aakash-chaddha/llama.cpp`](https://github.com/aakash-chaddha/llama.cpp) (the engine, a fork of
+thecodacus/llama.cpp's parallel-decision work).
