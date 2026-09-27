@@ -824,7 +824,7 @@ export default function App() {
             </p>
             <p>
               Something broken? The library: <a href="https://github.com/aakash-chaddha/wllama/issues">wllama issues</a> ·
-              the engine: <a href="https://github.com/thecodacus/llama.cpp/issues">llama.cpp fork issues</a>.
+              the engine: <a href="https://github.com/aakash-chaddha/llama.cpp/issues">llama.cpp fork issues</a>.
             </p>
           </footer>
         </main>
