@@ -40,7 +40,7 @@ export function ComparePanel({
 }: {
   decision: DecisionRun;
   generation: GenerationRun;
-  onRunBoth: () => void;
+  onRunBoth: (signal?: AbortSignal) => void;
   canRun: boolean;
   busy: boolean;
 }) {
@@ -63,13 +63,14 @@ export function ComparePanel({
   return (
     <>
       <p className="lede">
-        The same image and the same schema, answered twice: once scored as one batched pass, once
-        generated token by token under a JSON grammar. The bars are the two wall times on your
-        machine, and the table is the two answers on the same fields.
+        System-1 against autoregressive, on one question: the same image and the same schema,
+        answered once in one batched pass and once generated token by token under a JSON grammar.
+        The bars are the two wall times on your machine, and the table is the two answers on the
+        same fields.
       </p>
 
       <div className="row" style={{ marginBottom: 'var(--s-4)' }}>
-        <button type="button" className="primary" onClick={onRunBoth} disabled={busy || !canRun}>
+        <button type="button" className="primary" onClick={() => onRunBoth()} disabled={busy || !canRun}>
           run both
         </button>
         <span className="status">

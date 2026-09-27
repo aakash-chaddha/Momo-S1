@@ -34,12 +34,12 @@ export function Island() {
           <stop offset="100%" stopColor="#8b6742" />
         </linearGradient>
         <linearGradient id="island-grass" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#aed0a4" />
-          <stop offset="100%" stopColor="#78a572" />
+          <stop offset="0%" stopColor="#8ecb6d" />
+          <stop offset="100%" stopColor="#4d9752" />
         </linearGradient>
         <radialGradient id="island-glow" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0%" stopColor="#ffefcd" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#ffefcd" stopOpacity="0" />
+          <stop offset="0%" stopColor="#eaf5ff" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#eaf5ff" stopOpacity="0" />
         </radialGradient>
       </defs>
 
@@ -63,7 +63,7 @@ export function Island() {
         fill="#6b9866"
         opacity="0.42"
       />
-      <g stroke="#93c28c" strokeWidth="3" strokeLinecap="round" fill="none">
+      <g stroke="#a8d98c" strokeWidth="3" strokeLinecap="round" fill="none">
         <path d="M158 108 c 5 -13 3 -20 -1 -25" />
         <path d="M173 104 c 7 -11 9 -18 7 -25" />
         <path d="M404 110 c -5 -13 -3 -20 1 -25" />
@@ -72,27 +72,27 @@ export function Island() {
       {/* three trees, canopies well clear of the cap and inside the frame */}
       <g>
         <path d="M186 116 l6 -30 6 30 z" fill="#8a6c4c" />
-        <circle cx="192" cy="70" r="30" fill="#6f9c68" />
-        <circle cx="170" cy="82" r="20" fill="#84b27c" />
-        <circle cx="214" cy="81" r="18" fill="#5f8c5c" />
+        <circle cx="192" cy="70" r="30" fill="#63a755" />
+        <circle cx="170" cy="82" r="20" fill="#7cc068" />
+        <circle cx="214" cy="81" r="18" fill="#4d8f47" />
       </g>
       <g>
         <path d="M276 114 l8 -42 8 42 z" fill="#8a6c4c" />
-        <circle cx="284" cy="56" r="38" fill="#79a673" />
-        <circle cx="254" cy="72" r="26" fill="#8ab783" />
-        <circle cx="314" cy="70" r="24" fill="#5f8c5c" />
+        <circle cx="284" cy="56" r="38" fill="#6fb35c" />
+        <circle cx="254" cy="72" r="26" fill="#88c970" />
+        <circle cx="314" cy="70" r="24" fill="#4d8f47" />
       </g>
       <g>
         <path d="M368 116 l5 -26 5 26 z" fill="#8a6c4c" />
-        <circle cx="373" cy="78" r="24" fill="#6f9c68" />
-        <circle cx="355" cy="88" r="16" fill="#84b27c" />
+        <circle cx="373" cy="78" r="24" fill="#63a755" />
+        <circle cx="355" cy="88" r="16" fill="#7cc068" />
       </g>
 
       {/* the small resident */}
       <g transform="translate(232 112)">
         <ellipse cx="0" cy="0" rx="16" ry="14" fill="#2c2a26" />
-        <circle cx="-5.5" cy="-2.5" r="3.6" fill="#fdfaf2" />
-        <circle cx="5.5" cy="-2.5" r="3.6" fill="#fdfaf2" />
+        <circle cx="-5.5" cy="-2.5" r="3.6" fill="#fbf5e2" />
+        <circle cx="5.5" cy="-2.5" r="3.6" fill="#fbf5e2" />
         <circle cx="-5.5" cy="-2.5" r="1.7" fill="#2c2a26" />
         <circle cx="5.5" cy="-2.5" r="1.7" fill="#2c2a26" />
         <g stroke="#2c2a26" strokeWidth="2.2" strokeLinecap="round">

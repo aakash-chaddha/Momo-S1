@@ -6,9 +6,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev-restart": "node e2e/restart-dev.mjs",
+    "check-dev": "node e2e/check-dev.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "smoke": "node e2e/decision-smoke.mjs",
+    "smoke:webmcp": "node e2e/webmcp-smoke.mjs",
     "samples": "node e2e/make-samples.mjs",
     "check-evidence": "node e2e/check-evidence.mjs",
     "bench": "node e2e/bench-decision.mjs",
@@ -25,6 +28,7 @@
     "@vitejs/plugin-react": "^4.3.1",
     "playwright": "^1.63.0",
     "typescript": "^5.5.4",
-    "vite": "^5.3.4"
+    "vite": "^5.3.4",
+    "webmcp-types": "^0.1.9"
   }
 }

@@ -42,39 +42,43 @@
 }
 
 :root {
-  /* --- paper and ink ---------------------------------------------------- */
-  --canvas: #f4eee0;
-  --surface: #fdfaf2;
-  --surface-2: #f0e8d6;
-  --surface-3: #e8dec8;
-  --ink: #22301f;
-  --ink-soft: #4c5a47;
-  --ink-faint: #525c4c;
+  /* --- sky and ink ------------------------------------------------------
+     The canvas is the sky, washed just far enough toward white that the rail's
+     own text over it holds 10:1. The panels are the cream of a belly: the only
+     warm thing in a cool frame, which is exactly why the eye finds them. ---- */
+  --canvas: #cfe2f1;
+  --surface: #fbf5e2;
+  --surface-2: #f3ecd4;
+  --surface-3: #e9dfbe;
+  --ink: #16293a; /* umbrella navy */
+  --ink-soft: #3a5163;
+  --ink-faint: #4c6072;
 
   /* --- one live accent, and the engine's own words (not decoration) ------ */
-  --accent: #2f5670; /* sky: running, active, the live reading */
-  --accent-ink: #fdfaf2; /* paper on the accent */
-  --accent-soft: #d8e6ee;
-  --warn: #a0661f; /* ochre: in flight, and the value that won */
-  --bad: #8f4530; /* terracotta: an error, or an answer to distrust */
-  --ok: #3f6235; /* moss: finished */
-  --moss: #4a6b46; /* the mark that won: a leaf, not a light */
+  --accent: #1f5c86; /* sky: running, active, the live reading */
+  --accent-ink: #fbf5e2; /* cream on the accent */
+  --accent-soft: #cfe2f1;
+  --warn: #8a5d0e; /* ochre: in flight, and the value that won */
+  --bad: #9c3b2a; /* terracotta: an error, or an answer to distrust */
+  --ok: #2e6b3f; /* grass: finished */
+  --moss: #357a42; /* the mark that won: a leaf, not a light */
 
   /* --- lines and data marks --------------------------------------------
      Three jobs, three values. A hairline between two rows is decoration; a
      control's border is the only thing identifying it, so it clears 3:1 on
-     the darkest surface it can sit on (WCAG 1.4.11). --------------------- */
-  --line: #dccfb4;
-  --line-panel: #7d7157;
-  --line-2: #74684e;
-  --line-3: #6b6149;
-  --bar: #cfd8c2;
+     the darkest surface it can sit on (WCAG 1.4.11). The hairlines carry a
+     little sky in them so the cream sheets read as part of the frame. ------ */
+  --line: #b6c2cd;
+  --line-panel: #63788a;
+  --line-2: #5b7183;
+  --line-3: #526a7c;
+  --bar: #9dbdd8;
 
-  /* --- elevation: warm, diffuse, never harsh --------------------------- */
-  --edge: inset 0 1px 0 rgba(255, 253, 246, 0.9);
-  --e1: 0 1px 2px rgba(96, 78, 48, 0.1);
-  --e2: 0 12px 28px -14px rgba(96, 78, 48, 0.22);
-  --e3: 0 36px 80px -36px rgba(96, 78, 48, 0.3);
+  /* --- elevation: cool and diffuse, the way shadow falls under sky ------- */
+  --edge: inset 0 1px 0 rgba(255, 252, 242, 0.9);
+  --e1: 0 1px 2px rgba(30, 55, 80, 0.1);
+  --e2: 0 12px 28px -14px rgba(30, 55, 80, 0.22);
+  --e3: 0 36px 80px -36px rgba(30, 55, 80, 0.3);
 
   --r-1: 6px;
   --r-2: 10px;
@@ -348,9 +352,17 @@ textarea {
   overflow: hidden;
   pointer-events: none;
   perspective: 1200px;
-  /* a sky that turns to paper: pale enough at the top that the rail's own text over it is
-     still 10:1, warm enough at the bottom that the page reads as one sheet */
-  background: linear-gradient(180deg, #e3edf1 0%, #eaeef0 22%, #f0eade 52%, var(--canvas) 78%);
+  /* a sky that turns to meadow: the top of the frame is the deep part of the
+     sky, the bottom drifts into grass, and the whole thing stays pale enough
+     that the rail's own text over any stop holds 10:1 */
+  background: linear-gradient(
+    180deg,
+    #b8dcef 0%,
+    #c4e2f2 24%,
+    var(--canvas) 52%,
+    #cfe3cf 78%,
+    #c9e2bd 100%
+  );
 }
 
 .scene-layer {
@@ -365,9 +377,9 @@ textarea {
   height: 52vw;
   background: radial-gradient(
     circle at 50% 50%,
-    rgba(255, 231, 178, 0.72) 0%,
-    rgba(255, 231, 178, 0.28) 38%,
-    rgba(255, 231, 178, 0) 68%
+    rgba(234, 245, 255, 0.72) 0%,
+    rgba(234, 245, 255, 0.28) 38%,
+    rgba(234, 245, 255, 0) 68%
   );
 }
 
@@ -411,8 +423,8 @@ textarea {
   width: 5px;
   height: 5px;
   border-radius: var(--r-pill);
-  background: rgba(255, 246, 222, 0.9);
-  box-shadow: 0 0 10px rgba(255, 236, 190, 0.8);
+  background: rgba(255, 252, 242, 0.9);
+  box-shadow: 0 0 10px rgba(226, 240, 252, 0.8);
   animation: pollen-drift 26s var(--ease-out) infinite alternate;
 }
 .scene-pollen span:nth-child(1) {
@@ -575,7 +587,7 @@ textarea {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 26px;
-  box-shadow: var(--e2), inset 0 1px 0 rgba(255, 253, 246, 0.9);
+  box-shadow: var(--e2), inset 0 1px 0 rgba(255, 252, 242, 0.9);
 }
 
 /* the vertical rule runs the length of the pipeline, behind the rows */
@@ -899,7 +911,7 @@ button.primary {
   border-radius: var(--r-pill);
   padding: 10px 48px 10px 22px;
   position: relative;
-  box-shadow: 0 10px 22px -12px rgba(29, 62, 84, 0.55);
+  box-shadow: 0 10px 22px -12px rgba(22, 41, 58, 0.55);
 }
 /* the trailing arrow never sits naked beside the label: it is nested in its own circle,
    flush with the button's inner edge. Drawn as a pseudo-element so it cannot leak into the
@@ -914,7 +926,7 @@ button.primary::after {
   margin-top: -14px;
   border-radius: var(--r-pill);
   background-color: rgba(255, 255, 255, 0.18);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3.4 8.6L8.6 3.4M8.6 3.4H4.8M8.6 3.4v3.8' stroke='%23fdfaf2' stroke-width='1.7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3.4 8.6L8.6 3.4M8.6 3.4H4.8M8.6 3.4v3.8' stroke='%23fbf5e2' stroke-width='1.7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
   background-size: 13px 13px;
@@ -1380,7 +1392,7 @@ label.inline {
   bottom: var(--s-2);
   padding: 2px 8px;
   border-radius: var(--r-pill);
-  background: rgba(253, 250, 242, 0.92);
+  background: rgba(251, 245, 226, 0.92);
   border: 1px solid var(--line-2);
   color: var(--ink);
   font-family: var(--font-mono);
@@ -1402,7 +1414,7 @@ label.inline {
   align-items: center;
   justify-content: center;
   padding: var(--s-5);
-  background: rgba(34, 48, 31, 0.62);
+  background: rgba(22, 41, 58, 0.62);
 }
 .lightbox-plate {
   margin: 0;
@@ -1610,7 +1622,7 @@ label.inline {
   border: 7px solid var(--surface-3);
   border-radius: 28px;
   background: var(--surface);
-  box-shadow: var(--e2), inset 0 1px 0 rgba(255, 253, 246, 0.9);
+  box-shadow: var(--e2), inset 0 1px 0 rgba(255, 252, 242, 0.9);
   padding: var(--s-4) var(--s-4) var(--s-5);
   margin: 0 0 var(--s-5);
   overflow: hidden;
@@ -1713,8 +1725,8 @@ label.inline {
   bottom: 12px;
   width: 5px;
   border-radius: var(--r-pill);
-  background: linear-gradient(180deg, #8a6c4c 0%, #7d7a56 42%, #6b9866 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 253, 246, 0.35);
+  background: linear-gradient(180deg, #5c7a63 0%, #487a5c 42%, #357a42 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 252, 242, 0.35);
 }
 .fork[data-empty='true'] .fork-lanes::before {
   background: var(--line);
@@ -1745,7 +1757,7 @@ label.inline {
   width: 17px;
   height: 2px;
   border-radius: var(--r-pill);
-  background: #93b389;
+  background: #7cb87a;
 }
 .lane::after {
   /* the bud where the branch leaves the stem */
@@ -1757,7 +1769,7 @@ label.inline {
   height: 7px;
   margin-top: -3.5px;
   border-radius: var(--r-pill);
-  background: #7fa877;
+  background: #4f9a5c;
   transition: transform 260ms var(--ease-pop);
 }
 .lane[data-empty='true']::before {
@@ -1881,7 +1893,7 @@ button.lane[data-hot='true'] {
     90deg,
     transparent,
     color-mix(in srgb, var(--warn) 14%, transparent) 42%,
-    rgba(255, 247, 224, 0.72) 50%,
+    rgba(255, 250, 232, 0.72) 50%,
     color-mix(in srgb, var(--warn) 14%, transparent) 58%,
     transparent
   );
@@ -2216,6 +2228,24 @@ pre {
 .close p {
   color: var(--ink-soft);
   font-size: 13.5px;
+  max-width: var(--measure);
+}
+/* the proof shot in the close: a chat driving this page, framed the way the panels are */
+.shot {
+  margin: var(--s-5) 0 var(--s-2);
+  max-width: min(1120px, 100%);
+}
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line-panel);
+  border-radius: var(--r-3);
+  box-shadow: var(--e3);
+  background: var(--surface-2);
+}
+.shot figcaption {
+  margin-top: var(--s-2);
   max-width: var(--measure);
 }
 

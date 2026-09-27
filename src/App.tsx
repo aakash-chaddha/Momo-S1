@@ -3,6 +3,7 @@ import {
   Wllama,
   type DecisionContentPart,
   type DecisionRequest,
+  type DecisionResponse,
   type LoadedContextInfo,
 } from '@wllama/wllama';
 import {
@@ -25,8 +26,16 @@ import {
   runGeneration,
   generationRequestBody,
   type DecisionRun,
+  type GenerationAnswer,
   type GenerationRun,
 } from './lib/runs';
+import { fetchSample, SAMPLES } from './lib/samples';
+import {
+  installWebMcpTools,
+  type EvidenceInput,
+  type MomosTools,
+  type QuestionInput,
+} from './lib/webmcp';
 import { EvidencePanel } from './components/EvidencePanel';
 import { Island } from './components/Island';
 import { Scene } from './components/Scene';
@@ -38,9 +47,18 @@ import { Cell, Readout, sec } from './components/Readout';
 import { StageRail, type StageRow } from './components/StageRail';
 import { StatusBar } from './components/StatusBar';
 import { NativeHandoff } from './components/NativeHandoff';
+import { AgentHandoff } from './components/AgentHandoff';
 import type { LaneSpec } from './components/ForkRail';
 
 type Phase = 'idle' | 'downloading' | 'loading' | 'ready';
+
+// what a run reports back to its caller (the buttons ignore it, the webmcp tools return it)
+type DecisionOutcome =
+  | { ok: true; response: DecisionResponse; wallMs: number }
+  | { ok: false; error: string };
+type GenerationOutcome =
+  | { ok: true; answers: GenerationAnswer[] }
+  | { ok: false; error: string };
 
 const mb = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(0)} MB`;
 const THREADS = Math.max(1, (navigator.hardwareConcurrency || 2) - 1);
@@ -168,7 +186,9 @@ export default function App() {
 
   // ----- actions -----
 
-  const loadModel = useCallback(async () => {
+  const loadModel = useCallback(async (pick?: string) => {
+    // `pick` comes from the webmcp load-model tool; the button calls this with no argument
+    const m = MODELS.find((x) => x.id === pick) ?? model;
     setLoadError('');
     setProgress(0);
     setDownloaded(false);
@@ -187,9 +207,9 @@ export default function App() {
     }
     try {
       await w.loadModelFromHF(
-        { repo: model.repo, file: model.file, mmprojFile: model.mmprojFile },
+        { repo: m.repo, file: m.file, mmprojFile: m.mmprojFile },
         {
-          ...loadParams(model),
+          ...loadParams(m),
           log_level: LOG_LEVEL,
           progressCallback: ({ loaded, total }) => {
             if (total) setProgress(Math.min(1, loaded / total));
@@ -202,13 +222,16 @@ export default function App() {
       );
       setInfo(w.getLoadedContextInfo());
       setPhase('ready');
+      return { ok: true as const, error: '' };
     } catch (e) {
       // a context that failed to load cannot be reused; the next press starts a fresh instance
       await w.exit().catch(() => undefined);
       wllamaRef.current = null;
       setPhase('idle');
       setDownloaded(false);
-      setLoadError((e as Error)?.message || String(e));
+      const message = (e as Error)?.message || String(e);
+      setLoadError(message);
+      return { ok: false as const, error: message };
     }
   }, [model]);
 
@@ -265,9 +288,10 @@ export default function App() {
     abortRef.current?.abort();
   }, []);
 
-  const startDecision = useCallback(async () => {
+  const startDecision = useCallback(async (external?: AbortSignal): Promise<DecisionOutcome> => {
     const w = wllamaRef.current;
-    if (!w || !schemaObj) return false;
+    if (!w || !schemaObj)
+      return { ok: false, error: 'the model is not loaded, or the schema is not valid' };
     const body: DecisionRequest = {
       instructions,
       schema: schemaObj,
@@ -277,6 +301,10 @@ export default function App() {
     };
     const ctrl = new AbortController();
     abortRef.current = ctrl;
+    // only a real AbortSignal is forwarded: a stray first argument (a click event, say) is not one
+    const sig = external instanceof AbortSignal ? external : undefined;
+    const forwarded = () => ctrl.abort();
+    sig?.addEventListener('abort', forwarded);
     setGeneration(idleGenerationRun);
     setDecision({
       ...idleDecisionRun,
@@ -297,24 +325,27 @@ export default function App() {
         request: body,
       });
       setDecisionIndex(0);
-      return true;
+      return { ok: true, response, wallMs };
     } catch (e) {
       const aborted = ctrl.signal.aborted;
+      const message = (e as Error)?.message || String(e);
       setDecision({
         ...idleDecisionRun,
         status: aborted ? 'stopped' : 'error',
-        error: aborted ? '' : (e as Error)?.message || String(e),
+        error: aborted ? '' : message,
         request: body,
       });
-      return false;
+      return { ok: false, error: aborted ? 'stopped' : message };
     } finally {
       abortRef.current = null;
+      sig?.removeEventListener('abort', forwarded);
     }
   }, [buildContexts, instructions, schemaObj]);
 
-  const startGeneration = useCallback(async () => {
+  const startGeneration = useCallback(async (external?: AbortSignal): Promise<GenerationOutcome> => {
     const w = wllamaRef.current;
-    if (!w || !schemaObj) return;
+    if (!w || !schemaObj)
+      return { ok: false, error: 'the model is not loaded, or the schema is not valid' };
     const contexts = buildContexts();
     const input = {
       instructions,
@@ -324,6 +355,9 @@ export default function App() {
     };
     const ctrl = new AbortController();
     abortRef.current = ctrl;
+    const sig = external instanceof AbortSignal ? external : undefined;
+    const forwarded = () => ctrl.abort();
+    sig?.addEventListener('abort', forwarded);
     setGeneration({
       ...idleGenerationRun,
       running: true,
@@ -346,25 +380,180 @@ export default function App() {
         current: '',
         currentIndex: 0,
       });
+      return { ok: true, answers };
     } catch (e) {
       const aborted = ctrl.signal.aborted;
+      const message = (e as Error)?.message || String(e);
       setGeneration((g) => ({
         ...g,
         running: false,
         status: aborted ? 'stopped' : 'error',
-        error: aborted ? '' : (e as Error)?.message || String(e),
+        error: aborted ? '' : message,
         current: '',
       }));
+      return { ok: false, error: aborted ? 'stopped' : message };
     } finally {
       abortRef.current = null;
+      sig?.removeEventListener('abort', forwarded);
     }
   }, [buildContexts, instructions, live, schemaObj]);
 
   // one press, both answers: the pass first, then the generation, so the comparison below is
   // always made from a pair that ran back to back on the same question
-  const runBoth = useCallback(async () => {
-    if (await startDecision()) await startGeneration();
-  }, [startDecision, startGeneration]);
+  const runBoth = useCallback(
+    async (external?: AbortSignal) => {
+      const decision = await startDecision(external);
+      const generation = decision.ok ? await startGeneration(external) : null;
+      return { decision, generation };
+    },
+    [startDecision, startGeneration]
+  );
+
+  // ----- webmcp: the same page functions, callable by a browser agent -----
+  // The handlers read the state of this render and call the very callbacks the buttons call, so
+  // a tool run and a click are the same run. They are rebuilt every render and kept in a ref;
+  // the tools themselves are registered once, below.
+  const toolsRef = useRef<MomosTools | null>(null);
+
+  useEffect(() => {
+    const loadModelFn = loadModel;
+    const applyPresetFn = applyPreset; // property names are not bindings; alias what collides
+    toolsRef.current = {
+      status: () => ({
+        phase,
+        ready: phase === 'ready',
+        canRun,
+        busy,
+        model: { id: model.id, name: model.name, repo: model.repo },
+        models: MODELS.map((m) => ({
+          id: m.id,
+          name: m.name,
+          note: m.note,
+          download: totalSize(m),
+        })),
+        evidence: {
+          image: live ? { name: live.name, size: live.size, note: live.note } : null,
+          text: context,
+        },
+        question: { preset: presetId, instructions, schema: schemaObj, problem: schemaProblem },
+        presets: PRESETS.map((p) => ({
+          id: p.id,
+          name: p.name,
+          blurb: p.blurb,
+          needsImage: !!p.needsImage,
+        })),
+        samples: SAMPLES.map((s) => ({ file: s.file, name: s.name, caption: s.caption })),
+        runs: {
+          decision: {
+            status: decision.status,
+            error: decision.error,
+            wallMs: decision.wallMs,
+            response: decision.response,
+          },
+          generation: {
+            status: generation.status,
+            error: generation.error,
+            answers: generation.answers,
+          },
+        },
+      }),
+
+      loadModel: async (pick?: string) => {
+        if (pick && !MODELS.some((m) => m.id === pick))
+          throw new Error(
+            `unknown model "${pick}"; available: ${MODELS.map((m) => m.id).join(', ')}`
+          );
+        if (pick && pick !== modelId) await selectModel(pick);
+        const done = await loadModelFn(pick);
+        if (!done.ok) throw new Error(done.error);
+        return { ok: true, model: pick ?? modelId, phase: 'ready' };
+      },
+
+      setEvidence: async (input: EvidenceInput) => {
+        if (input.clearImage) removeImage();
+        if (input.sample) {
+          const s = SAMPLES.find((x) => x.file === input.sample);
+          if (!s)
+            throw new Error(
+              `unknown sample "${input.sample}"; available: ${SAMPLES.map((x) => x.file).join(', ')}`
+            );
+          await addImage(await fetchSample(s));
+        }
+        if (input.imageUrl) {
+          const res = await fetch(input.imageUrl);
+          if (!res.ok) throw new Error(`could not fetch the image: ${res.status}`);
+          const blob = await res.blob();
+          const name = input.imageUrl.split('/').pop()?.split('?')[0] || 'evidence';
+          await addImage(new File([blob], name, { type: blob.type || 'image/png' }));
+        }
+        if (typeof input.text === 'string') setContext(input.text);
+        return {
+          ok: true,
+          evidence: {
+            image: input.clearImage && !input.sample && !input.imageUrl ? null : input.sample ?? input.imageUrl ?? live?.name ?? null,
+            text: typeof input.text === 'string' ? input.text : context,
+          },
+        };
+      },
+
+      applyPreset: (preset: string) => {
+        const p = PRESETS.find((x) => x.id === preset);
+        if (!p)
+          throw new Error(
+            `unknown preset "${preset}"; available: ${PRESETS.map((x) => x.id).join(', ')}`
+          );
+        applyPresetFn(preset);
+        return { ok: true, question: { preset: p.id, instructions: p.instructions, schema: p.schema, context: p.context } };
+      },
+
+      setQuestion: (input: QuestionInput) => {
+        if (input.schema) {
+          const problem = validateSchema(input.schema);
+          if (problem) throw new Error(`schema rejected: ${problem}`);
+          setSchemaText(JSON.stringify(input.schema, null, 2));
+        }
+        if (typeof input.instructions === 'string') setInstructions(input.instructions);
+        return {
+          ok: true,
+          question: {
+            instructions: typeof input.instructions === 'string' ? input.instructions : instructions,
+            schema: input.schema ?? schemaObj,
+          },
+        };
+      },
+
+      runDecision: async (signal?: AbortSignal) => {
+        if (phase !== 'ready') throw new Error('the model is not loaded yet: call load-model first');
+        if (busy) throw new Error('a run is already in flight: call stop-run first');
+        const out = await startDecision(signal);
+        if (!out.ok) throw new Error(out.error);
+        return { ok: true, wallMs: Math.round(out.wallMs), response: out.response };
+      },
+
+      runGeneration: async (signal?: AbortSignal) => {
+        if (phase !== 'ready') throw new Error('the model is not loaded yet: call load-model first');
+        if (busy) throw new Error('a run is already in flight: call stop-run first');
+        const out = await startGeneration(signal);
+        if (!out.ok) throw new Error(out.error);
+        return { ok: true, answers: out.answers };
+      },
+
+      runBoth: async (signal?: AbortSignal) => {
+        if (phase !== 'ready') throw new Error('the model is not loaded yet: call load-model first');
+        if (busy) throw new Error('a run is already in flight: call stop-run first');
+        const out = await runBoth(signal);
+        return { ok: out.decision.ok, ...out };
+      },
+
+      stopRun: () => {
+        cancel();
+        return { ok: true, stopped: true };
+      },
+    };
+  });
+
+  // register once; the tools keep calling the latest handlers through the ref
+  useEffect(() => installWebMcpTools(() => toolsRef.current as MomosTools), []);
 
   // ----- render -----
 
@@ -507,9 +696,11 @@ export default function App() {
           sub="system-1"
           claim={
             <>
-              A finite schema is scored against an image in{' '}
-              <strong>one batched forward pass</strong>, with a probability per field. Then the same
-              question is generated token by token, so the two can be compared on your machine.
+              A multimodal model that thinks once and answers whole: the entire schema scored
+              against your image in <strong>one batched forward pass</strong>, in this browser,
+              with <strong>a probability per field</strong> and no way to answer off schema. Then
+              the same weights write the answer the slow way, so both routes can be compared on
+              your own machine.
             </>
           }
           rows={stageRows}
@@ -565,9 +756,9 @@ export default function App() {
                       </span>
                     </div>
                     <p className="lede" style={{ marginTop: 'var(--s-3)', marginBottom: 0 }}>
-                      Nothing is uploaded: there is no backend to upload to. The weights came from{' '}
-                      <code>{model.repo}</code> and now live in this browser&apos;s cache, so the
-                      next visit loads them in seconds.
+                      The model runs in the browser: there is no server to upload to. The weights
+                      came from <code>{model.repo}</code> and now live in this browser&apos;s cache,
+                      so the next visit loads them in seconds.
                     </p>
                   </>
                 ) : (
@@ -618,7 +809,7 @@ export default function App() {
                       <button
                         type="button"
                         className="primary"
-                        onClick={loadModel}
+                        onClick={() => void loadModel()}
                         disabled={phase === 'downloading' || phase === 'loading'}
                       >
                         {phase === 'idle' ? 'load the model' : 'loading…'}
@@ -777,7 +968,7 @@ export default function App() {
             <div className="stage-head">
               <span className="stage-num">03</span>
               <h2>one pass</h2>
-              <span className="stage-note">the system-1 decision, with a probability per field</span>
+              <span className="stage-note">the system-1 run: one pass, with a probability per field</span>
             </div>
             <DecisionPanel
               run={decision}
@@ -803,7 +994,7 @@ export default function App() {
             <div className="stage-head">
               <span className="stage-num">04</span>
               <h2>token by token</h2>
-              <span className="stage-note">the same question, generated with a JSON grammar</span>
+              <span className="stage-note">the autoregressive run, generated token by token</span>
             </div>
             <GenerationPanel
               run={generation}
@@ -845,13 +1036,40 @@ export default function App() {
           </section>
 
           <NativeHandoff model={model} />
+          <AgentHandoff />
 
           <footer className="colophon">
+            <p className="panel-key">why this exists</p>
+            <ol className="why">
+              <li>
+                one decision, not one word at a time: a multimodal model reads the pixels and the
+                question and writes the whole answer in a single pass, with a probability on every
+                field it chose.
+              </li>
+              <li>
+                the answer is on schema, guaranteed: fields and values can only come from the
+                schema you wrote, so a run may pick the wrong value but can never come back
+                malformed.
+              </li>
+              <li>
+                it all happens in this tab: the engine is wasm, the weights sit in your browser
+                cache, and no image and no question is ever uploaded anywhere.
+              </li>
+              <li>
+                the trick is not a new model. Ordinary autoregressive weights, asked to decide
+                between the answers you allow instead of generating toward one, become a system-1
+                model.
+              </li>
+              <li>
+                and then the honest part: the same weights answer the same question the old way,
+                and the two clocks and the two answers are laid side by side for you to judge.
+              </li>
+            </ol>
             <p>
-              A 450M model answers small questions imperfectly. The page is built to show that
-              instead of hiding it: every field carries its probability, numeric fields carry a
-              p10-p90 interval, and fields scored by the cheap walk say so. Read a low probability
-              as a weak answer, not as a fact.
+              A 450M model answers small questions imperfectly, and the comparison is only worth
+              something if that stays visible: every field carries its probability, numeric fields
+              carry a p10-p90 interval, and fields scored by the cheap walk say so. Read a low
+              probability as a weak answer, not as a fact.
             </p>
             <p>
               No analytics, no third-party scripts, and no request leaves the page once the weights
@@ -861,6 +1079,10 @@ export default function App() {
             <p>
               Something broken? The library: <a href="https://github.com/aakash-chaddha/wllama/issues">wllama issues</a> ·
               the engine: <a href="https://github.com/aakash-chaddha/llama.cpp/issues">llama.cpp fork issues</a>.
+            </p>
+            <p>
+              If this saved you time:{' '}
+              <a href="https://www.buymeacoffee.com/aakashchaddha">buy me a coffee</a>.
             </p>
           </footer>
         </main>

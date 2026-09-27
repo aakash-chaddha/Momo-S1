@@ -16,6 +16,9 @@ models
 .idea
 .DS_Store
 
+# reference screen recordings (local mood-board only, large binaries)
+reference/
+
 # the scroll-craft build folder: this skill's workspace, briefs and its per-user
 # fingerprint registry (see scrollcraft/FINGERPRINTS.md). Local state, not part of the release.
 scrollcraft/

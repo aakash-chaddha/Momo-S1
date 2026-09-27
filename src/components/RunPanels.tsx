@@ -54,7 +54,7 @@ export function DecisionPanel({
   run: DecisionRun;
   resultIndex: number;
   setResultIndex: (i: number) => void;
-  onRun: () => void;
+  onRun: (signal?: AbortSignal) => void;
   onCancel: () => void;
   canRun: boolean;
   descriptions: Record<string, string>;
@@ -81,9 +81,11 @@ export function DecisionPanel({
   return (
     <>
       <p className="lede">
-        Every allowed value is scored as a token branch forked from the same cached prefix, all in
-        one batched forward pass. The JSON is assembled by the engine, not generated; the
-        probabilities are the model's own distribution over the values you allowed.
+        The system-1 run: the whole output is generated in one batched forward pass. Every allowed
+        value is scored as a token branch forked from the same cached prefix, and the JSON is
+        assembled by the engine rather than generated. That assembly is why schema matching is
+        guaranteed: a run can pick the wrong value, but it cannot pick one you did not allow, and
+        the probabilities are the model&apos;s own distribution over the values you did.
       </p>
 
       <div className="row" style={{ marginBottom: 'var(--s-4)' }}>
@@ -92,7 +94,7 @@ export function DecisionPanel({
             cancel
           </button>
         ) : (
-          <button type="button" className="primary" onClick={onRun} disabled={!canRun}>
+          <button type="button" className="primary" onClick={() => onRun()} disabled={!canRun}>
             run the decision
           </button>
         )}
@@ -230,16 +232,17 @@ export function GenerationPanel({
   canRun,
 }: {
   run: GenerationRun;
-  onRun: () => void;
+  onRun: (signal?: AbortSignal) => void;
   onCancel: () => void;
   canRun: boolean;
 }) {
   return (
     <>
       <p className="lede">
-        The same image and the same schema, asked again as a JSON-constrained completion and
-        streamed token by token. The two runs are sequential and share no state, so the comparison
-        in the next stage is between measured wall times on your machine, not a claim.
+        The autoregressive side of the comparison: the same image and the same schema, asked again
+        as a JSON-constrained completion and streamed token by token. The two runs are sequential
+        and share no state, so the comparison in the next stage is between measured wall times on
+        your machine, not a claim.
       </p>
 
       <div className="row" style={{ marginBottom: 'var(--s-4)' }}>
@@ -248,7 +251,7 @@ export function GenerationPanel({
             cancel
           </button>
         ) : (
-          <button type="button" className="primary" onClick={onRun} disabled={!canRun}>
+          <button type="button" className="primary" onClick={() => onRun()} disabled={!canRun}>
             run token by token
           </button>
         )}

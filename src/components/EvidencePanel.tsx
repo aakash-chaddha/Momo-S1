@@ -148,10 +148,11 @@ export function EvidencePanel({
   return (
     <>
       <p className="lede">
-        One image at a time: the pass decides the image that is attached here. Drag and drop, paste
-        from the clipboard, pick a file, or take one of the samples below; adding another image
-        replaces the one that is there. Images are downscaled to {MAX_IMAGE_EDGE} px and re-encoded
-        in the page before they reach the model. Click the image to see it at full size.
+        This is what the model gets to look at, one image at a time: the same pixels go to both
+        routes below. Drag and drop, paste from the clipboard, pick a file, or take one of the
+        samples below; adding another image replaces the one that is there. Images are downscaled
+        to {MAX_IMAGE_EDGE} px and re-encoded in the page before they reach the model. Click the
+        image to see it at full size.
       </p>
 
       <div className="evidence-grid">

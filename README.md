@@ -1,10 +1,25 @@
 # Momo-S1
 
-**momos-one — multimodal system-1 in your browser.** Give it an image and a finite question; it
-answers the whole schema in **one batched forward pass** and returns a probability for every field.
-Then it asks the same question token by token, so you can compare the two on your own machine.
+**momos-one — multimodal system-1 in your browser.** Give it an image and a finite question; the
+model answers the whole schema in **one batched forward pass** and returns a probability for every
+field, on schema by construction: fields and values can only come from the schema you wrote. Then
+the same weights answer the same question token by token, so you can compare the two on your own
+machine.
 
 No backend, no upload, no API key. The model and the engine both run in the browser.
+
+## Why this exists
+
+1. one decision, not one word at a time: a multimodal model reads the pixels and the question and
+   writes the whole answer in a single pass, with a probability on every field it chose.
+2. the answer is on schema, guaranteed: fields and values can only come from the schema you wrote,
+   so a run may pick the wrong value but can never come back malformed.
+3. it all happens in the tab: the engine is wasm, the weights sit in the browser cache, and no
+   image and no question is ever uploaded anywhere.
+4. the trick is not a new model. Ordinary autoregressive weights, asked to decide between the
+   answers you allow instead of generating toward one, become a system-1 model.
+5. and then the honest part: the same weights answer the same question the old way, and the two
+   clocks and the two answers are laid side by side for you to judge.
 
 ![The one pass section: the fork rail, the engine's time split and the per-field distributions](docs/img/02-decision.webp)
 
@@ -90,6 +105,13 @@ Section **03** shows both the request and the response JSON, with copy and downl
 
 ## Testing it on your own
 
+- **Other models.** The default is LFM2.5-VL-450M (~307 MiB), and the model menu offers the rest
+  of the vision and multimodal models that can run in a browser: SmolVLM-256M/500M and their
+  Video variants, Qwen3.5-0.8B, InternVL3-1B/2B, LFM2.5-VL-1.6B, Qwen3-VL-2B, Qwen2-VL-2B,
+  SmolVLM2-2.2B and Qwen3.5-2B, from ~266 MiB to ~1.75 GiB. Every entry carries the Hugging Face
+  files it will download; most are unmeasured candidates and their notes say so, and the two on
+  the new qwen35 backbone need a newer wasm before they load at all. The argument for each is in
+  [`docs/MODELS.md`](docs/MODELS.md).
 - **Your own images.** One at a time: drop, pick or paste an image, or take one of the samples:
   three complaint
   emails and three product screenshots (an error page, a declined checkout, an expired sign-in).
@@ -128,6 +150,41 @@ Section **03** shows both the request and the response JSON, with copy and downl
   text at every scroll position, checks for horizontal overflow, walks the tab order for a visible
   focus ring, and re-checks the reduced-motion composition. `--update-docs` also refreshes the
   three screenshots above (as WebP; it needs ffmpeg on the path).
+
+## Drive it from an agent (WebMCP)
+
+**You can point any LLM at this page and it will run all of it for you: you do not have to run it
+by hand.** Load the model, pick the evidence, ask the question, run either pass, read the
+probabilities - an agent can do every one of those through the page's own tools, in one ask.
+
+The page registers its own functions as tools on `document.modelContext` — the
+[WebMCP](https://github.com/webmachinelearning/webmcp) API. A browser agent (the built-in one in
+Chrome or Edge, ChatGPT Desktop, an extension, an iframe agent) can then load the model, set the
+evidence and the question, run either pass and read the result, without scraping the DOM or
+re-driving the buttons. The tools call the same handlers the buttons call, so an agent's run is the
+run you would get from stage 03 / 04 / 05, on the same engine, in the same state.
+
+![A chat driving the page: the site tools menu lists the nine WebMCP tools the page registered, and the chat has loaded the model, set the evidence and run both passes, with both answers and their probabilities in the table below](public/img/use-it-using-chatgpt-directly.png)
+
+| tool | does |
+|---|---|
+| `get-page-state` | read-only snapshot: what is loaded, the evidence, the question, the samples and presets offered, and the last decision and generation (with their responses) |
+| `load-model` | loads the engine and weights (the default is a ~307 MiB download, then cached; the other models in the menu cost more); `model` switches first |
+| `set-evidence` | one image (`sample` or `imageUrl`) and/or the context `text`; `clearImage` drops the image |
+| `apply-preset` | loads a shipped question: instructions, schema and context text |
+| `set-question` | sets `instructions` and the finite `schema` (compact fields or JSON Schema); a bad schema is rejected with the reason |
+| `run-decision` | the one batched pass: assembled answer, a probability per field, the timing split |
+| `run-generation` | the same answer written token by token, JSON-constrained, with wall and first-token times |
+| `run-both` | the pass first, then the generation, as a matched pair for the comparison |
+| `stop-run` | aborts the run in flight, the same as the stop button |
+
+Every tool returns JSON, every tool that needs the model says `call load-model first` instead of
+failing quietly, and the run tools honour the agent's `AbortSignal` (as does `stop-run`). The
+registration is a no-op in a browser without WebMCP; in Chrome/Edge enable it for local development
+with `about:flags#enable-webmcp-testing` (it is also on an origin trial in Chrome 149 and Edge 150,
+and ChatGPT Desktop has it). `npm run smoke:webmcp` drives the tools in a real browser — discovery,
+state, presets, a rejected schema, the error paths — and doubles as a conformance check against the
+browser's own implementation.
 
 ## Deploy it
 
@@ -182,17 +239,20 @@ src/                    the page (React + TypeScript)
   lib/runs.ts           the decision and generation calls
   lib/presets.ts        example questions (three fields each, a start and never a limit)
   lib/samples.ts        the sample evidence offered in 01 / evidence
+  lib/webmcp.ts         the same page functions registered as WebMCP tools for browser agents
   lib/motion.ts         the pointer tilt, transform-only and off for reduced motion
   components/Scene.tsx  the painted sky, clouds and ridges behind the instrument
   components/Island.tsx the floating island in the setup stage
   assets/fonts/         Fraunces and Nunito Sans, vendored (see assets/fonts/README.md)
 lib/wllama/             the wasm library: fork source + prebuilt wllama.wasm (see PROVENANCE.md)
 public/samples/         the sample evidence: complaint emails and product screenshots
+public/img/             the screenshot of a chat driving this page (WebMCP section above)
 e2e/make-samples.mjs    renders those screenshots (node e2e/make-samples.mjs)
 e2e/decision-smoke.mjs  headless end-to-end run (npm run smoke)
+e2e/webmcp-smoke.mjs    the WebMCP tools driven end to end (npm run smoke:webmcp)
 e2e/bench-decision.mjs  cold vs warm decision timings (npm run bench)
 e2e/ui-shots.mjs        UI screenshots and rendered-contrast checks (npm run shots)
-docs/                   plan, spec, implementation report, parity evidence, screenshots
+docs/                   plan, spec, implementation report, parity evidence, model candidates, screenshots
 ```
 
 ## Verification
@@ -201,6 +261,8 @@ docs/                   plan, spec, implementation report, parity evidence, scre
   **identical decisions**, every probability within 1.0 pp, identical token accounting
   (`docs/parity-*.json` are the raw bodies).
 - `docs/evidence-smoke.json` - the numbers of the last smoke run (timings, tokens, scored rows).
+- `npm run smoke:webmcp` - the WebMCP tool catalogue exercised against the browser's own
+  `document.modelContext` (or a spec-shaped stub where the browser has none).
 - `e2e/out/ui/summary.json` - the last UI run: every measured text line, the pixel-measured
   contrast ratio and the styled one, layout overflow, focus order and console errors.
 - The library's decision API is covered by browser tests in the wllama fork
@@ -231,3 +293,5 @@ Found a bug? Open an issue in this repository; for the library or the engine, th
 [`aakash-chaddha/wllama`](https://github.com/aakash-chaddha/wllama) (the wasm library) and
 [`aakash-chaddha/llama.cpp`](https://github.com/aakash-chaddha/llama.cpp) (the engine, a fork of
 thecodacus/llama.cpp's parallel-decision work).
+
+If this saved you time: [buy me a coffee](https://www.buymeacoffee.com/aakashchaddha).

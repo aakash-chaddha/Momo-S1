@@ -33,9 +33,11 @@ export function NativeHandoff({ model }: { model: ModelChoice }) {
     <section className="close" id="stage-wire">
       <h2>The same request, on a native server</h2>
       <p>
-        Nothing in the body above is browser-specific. Download the request from the decision
-        panel, start the fork with the line below, and post the file to it: the decisions come back
-        identical, because the wasm build runs the same <code>handle_decision</code> as the server.
+        Nothing here is a new model: the same autoregressive weights, scored as a decision in one
+        pass instead of generated token by token. That is the whole conversion, and nothing in the
+        body above is browser-specific. Download the request from the decision panel, start the
+        fork with the line below, and post the file to it: the decisions come back identical,
+        because the wasm build runs the same <code>handle_decision</code> as the server.
       </p>
 
       <div className="cmd">
