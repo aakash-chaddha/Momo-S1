@@ -9,6 +9,30 @@
       href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%224%22 fill=%22%23cfe2f1%22/%3E%3Cpath d=%22M8 13V7%22 stroke=%22%2316293a%22 stroke-width=%221.4%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M8 8c0-2.2 1.8-4 4-4 0 2.2-1.8 4-4 4z%22 fill=%22%234d9752%22/%3E%3Cpath d=%22M8 10c0-1.8-1.5-3.2-3.3-3.2 0 1.8 1.5 3.2 3.3 3.2z%22 fill=%22%231f5c86%22/%3E%3C/svg%3E"
     />
     <title>Momo-S1 · multimodal system-1 in your browser</title>
+    <script>
+      // The wasm engine is a pthread build and needs SharedArrayBuffer, which the browser only
+      // exposes on a cross-origin isolated document. Hosts that can set response headers
+      // (npm run preview, Netlify, Vercel, Cloudflare Pages) isolate the page themselves and this
+      // never runs. GitHub Pages cannot set them, so there ./coi.js adds them and the page reloads
+      // once to pick them up. The engine works either way; without isolation it is single threaded.
+      (function () {
+        if (self.crossOriginIsolated || !('serviceWorker' in navigator)) return;
+        // already controlled but still not isolated: the headers did not land, so do not loop
+        if (navigator.serviceWorker.controller) return;
+        navigator.serviceWorker
+          .register('./coi.js')
+          .then(function () {
+            navigator.serviceWorker.addEventListener(
+              'controllerchange',
+              function () {
+                location.reload();
+              },
+              { once: true }
+            );
+          })
+          .catch(function () {});
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

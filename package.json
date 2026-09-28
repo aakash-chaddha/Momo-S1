@@ -15,7 +15,8 @@
     "samples": "node e2e/make-samples.mjs",
     "check-evidence": "node e2e/check-evidence.mjs",
     "bench": "node e2e/bench-decision.mjs",
-    "shots": "node e2e/ui-shots.mjs"
+    "shots": "node e2e/ui-shots.mjs",
+    "check-pages": "node e2e/isolation-probe.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

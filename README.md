@@ -197,8 +197,26 @@ Cross-Origin-Embedder-Policy: require-corp
 ```
 
 `npm run preview` serves `dist/` with those headers. Netlify, Vercel, Cloudflare Pages and Hugging
-Face Spaces can set them; GitHub Pages cannot, so there the page falls back to a single thread and
-still works, just slower.
+Face Spaces can set them; GitHub Pages cannot.
+
+`public/coi.js` closes that gap: the page registers it only when it finds itself *not* cross-origin
+isolated, it adds the two headers to the responses it controls, and the page reloads once to pick
+them up. On a host that already sends them the worker is never registered and nothing changes. The
+result is that the engine runs multithreaded on GitHub Pages too.
+
+## Deploy it on GitHub Pages
+
+`.github/workflows/pages.yml` builds `dist/` and publishes it on every push to `main`. The first
+time, GitHub has to be told to publish from Actions rather than from a branch: **Settings → Pages →
+Source → GitHub Actions**, or
+
+```bash
+gh api repos/{owner}/{repo}/pages -X POST -f build_type=workflow
+```
+
+Note that GitHub Pages on a *private* repository needs GitHub Pro, Team or Enterprise Cloud. On the
+free plan the repository has to be public. The site itself is `https://<owner>.github.io/Momo-S1/`
+(`base: './'`, so the same build also serves from a domain root).
 
 ### Run the built site with no Node
 
@@ -218,8 +236,8 @@ cd /d F:\lab\jev\Momo-S1\dist && start http://localhost:4173/index.html && pytho
 ```
 
 Do not open `index.html` over `file://`: the wasm build needs HTTP to load. A plain file server does
-not send the COOP/COEP headers above, so the engine falls back to a single thread — slower, still
-correct. Use `npm run preview` when you want the multithreaded path.
+not send the COOP/COEP headers above, so there the page leans on `coi.js`, which is only registered
+when it is needed. Use `npm run preview` when you want the multithreaded path with no worker at all.
 
 ## Honesty about the model
 
@@ -242,7 +260,6 @@ src/                    the page (React + TypeScript)
   lib/webmcp.ts         the same page functions registered as WebMCP tools for browser agents
   lib/motion.ts         the pointer tilt, transform-only and off for reduced motion
   components/Scene.tsx  the painted sky, clouds and ridges behind the instrument
-  components/Island.tsx the floating island in the setup stage
   assets/fonts/         Fraunces and Nunito Sans, vendored (see assets/fonts/README.md)
 lib/wllama/             the wasm library: fork source + prebuilt wllama.wasm (see PROVENANCE.md)
 public/samples/         the sample evidence: complaint emails and product screenshots
