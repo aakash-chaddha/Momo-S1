@@ -297,6 +297,131 @@ textarea {
 }
 
 /* ==========================================================================
+   prologue: the way in
+
+   One centered claim over the daylight sky, with the real load control as its action. The
+   four lines drift upward at four rates as the reader scrolls past (the parallax grammar in
+   miniature). Translate only, never a fade: the failed-fade lesson recorded in
+   scrollcraft/FINGERPRINTS.md applies to exits as much as entrances.
+   ========================================================================== */
+
+.prologue {
+  min-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--s-8) var(--gutter);
+  gap: var(--s-4);
+}
+
+.prologue-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0;
+}
+
+/* a paragraph, not an h1: the stage rail carries the page's single h1, and the verification
+   harness fails the build on a second one */
+.prologue-title {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 7vw, 84px);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  line-height: 1.02;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.prologue-sub {
+  color: var(--ink-soft);
+  font-size: 15px;
+  max-width: 60ch;
+  margin: 0;
+  text-wrap: pretty;
+}
+.prologue-sub strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.prologue-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  margin-top: var(--s-2);
+}
+
+.prologue-note {
+  text-align: center;
+}
+
+@supports (animation-timeline: view()) {
+  /* the timeline longhands come after the shorthand in each rule: the shorthand resets
+     everything it does not name, so setting them in a shared rule first would be clobbered */
+  .prologue-eyebrow {
+    animation: prologue-drift-1 linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  .prologue-title {
+    animation: prologue-drift-2 linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  .prologue-sub {
+    animation: prologue-drift-3 linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  .prologue-cta,
+  .prologue-note {
+    animation: prologue-drift-4 linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+}
+
+@keyframes prologue-drift-1 {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -40px, 0);
+  }
+}
+@keyframes prologue-drift-2 {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -96px, 0);
+  }
+}
+@keyframes prologue-drift-3 {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -64px, 0);
+  }
+}
+@keyframes prologue-drift-4 {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -28px, 0);
+  }
+}
+
+/* ==========================================================================
    shell
    ========================================================================== */
 
@@ -413,6 +538,19 @@ textarea {
   transform: translateZ(-120px) scale(1.04);
 }
 
+/* the fast dark plane: a pine treeline that rises as the reader descends toward the peak.
+   Transparent at rest and where scroll timelines are unsupported, so those browsers keep
+   today's still painting. Decorative like the rest: fixed behind the opaque panels, visible
+   only in the gutters and between stages, never under words. */
+.scene-foreground {
+  bottom: -10vh;
+  left: -15%;
+  width: 130%;
+  height: 36vh;
+  opacity: 0;
+  transform: translateZ(60px) scale(0.97);
+}
+
 .scene-pollen {
   inset: 0;
   opacity: 0.5;
@@ -474,6 +612,9 @@ textarea {
   }
 }
 
+/* the dark act is gone (removed at the reader's request: the ground must not change color),
+   so this space holds no night layer. The peak keeps its staging from parallax alone. */
+
 /* scroll-driven parallax, where the browser has one. Chrome and Edge do, which is what this
    page supports. Elsewhere the scene is a still painting and nothing is lost but the drift. */
 @supports (animation-timeline: scroll()) {
@@ -491,6 +632,10 @@ textarea {
   }
   .scene-hills--near {
     animation: scene-drift-4 linear both;
+    animation-timeline: scroll(root block);
+  }
+  .scene-foreground {
+    animation: scene-rise linear both;
     animation-timeline: scroll(root block);
   }
 }
@@ -526,6 +671,74 @@ textarea {
   }
   to {
     transform: translate3d(-48px, -84px, 0) translateZ(-120px) scale(1.18);
+  }
+}
+
+/* the descent, in one timeline: hold the daylight sky through setup and evidence, rise the
+   treeline as the reader approaches the peak, then sink it back before the handoffs so the
+   close resolves on daylight (the reference returns to day; so does this). Each keyframe
+   preserves the layer's own depth transform; only the rise and the fade are added. Scrub-linked,
+   so every position is settled when photographed. */
+/* where named timelines exist, the treeline belongs to the pass itself: it rises as stage 03
+   enters and is gone before stage 04 starts, however tall the page grows. The pass names its
+   own passage; the page scopes the name so the fixed backdrop can read it. This wins over
+   the percentage fallback above by source order; browsers without it keep the fallback. */
+@supports (timeline-scope: --pass) {
+  .page {
+    timeline-scope: --pass;
+  }
+  #stage-03 {
+    view-timeline: --pass block;
+  }
+  .scene-foreground {
+    animation: scene-rise-on-pass linear both;
+    animation-timeline: --pass;
+  }
+}
+@keyframes scene-rise-on-pass {
+  from {
+    transform: translate3d(0, 8vh, 0) translateZ(60px) scale(0.97);
+    opacity: 0;
+  }
+  25% {
+    transform: translate3d(0, -3vh, 0) translateZ(60px) scale(0.97);
+    opacity: 0.92;
+  }
+  65% {
+    transform: translate3d(0, -5vh, 0) translateZ(60px) scale(0.97);
+    opacity: 0.92;
+  }
+  to {
+    transform: translate3d(0, 8vh, 0) translateZ(60px) scale(0.97);
+    opacity: 0;
+  }
+}
+/* percentage fallback for the treeline: same rise and fall, keyed to whole-page scroll for
+   browsers without named timelines. The named pass above wins where it exists. */
+@keyframes scene-rise {
+  from {
+    transform: translate3d(0, 8vh, 0) translateZ(60px) scale(0.97);
+    opacity: 0;
+  }
+  38% {
+    transform: translate3d(0, 8vh, 0) translateZ(60px) scale(0.97);
+    opacity: 0;
+  }
+  55% {
+    transform: translate3d(0, -3vh, 0) translateZ(60px) scale(0.97);
+    opacity: 0.92;
+  }
+  70% {
+    transform: translate3d(0, -5vh, 0) translateZ(60px) scale(0.97);
+    opacity: 0.92;
+  }
+  88% {
+    transform: translate3d(0, 8vh, 0) translateZ(60px) scale(0.97);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 8vh, 0) translateZ(60px) scale(0.97);
+    opacity: 0;
   }
 }
 
@@ -718,6 +931,37 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--s-3);
+}
+
+/* the chrome recedes: brand and claim drift up a little as the reader leaves the top, rows
+   untouched. Translate only, for the same reason as the prologue. */
+@supports (animation-timeline: scroll()) {
+  .rail-brand {
+    animation: rail-recede-1 linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0% 8%;
+  }
+  .rail-claim {
+    animation: rail-recede-2 linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0% 8%;
+  }
+}
+@keyframes rail-recede-1 {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+@keyframes rail-recede-2 {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -24px, 0);
+  }
 }
 
 /* ==========================================================================
@@ -1221,16 +1465,8 @@ label.inline {
   min-width: 0;
   margin-right: calc(-1 * var(--s-4));
 }
-/* the island hangs under the panel and takes the empty half of the deck with it. It is the one
-   place on the page with saturated art, because it is the one place with no text over it */
-.island-art {
-  display: block;
-  width: 100%;
-  max-width: 380px;
-  height: auto;
-  margin-inline: auto;
-  margin-top: calc(-1 * var(--s-1));
-}
+/* the deck-live panel overlaps the readout beside it; the empty half of the
+   deck keeps the composition's airspace on wide screens */
 .deck > .deck-spec {
   padding-left: calc(var(--s-5) + var(--s-4));
 }
@@ -2387,6 +2623,234 @@ pre {
   }
 }
 
+/* ==========================================================================
+   scroll devices, per component
+
+   Every working part gets a scroll moment, each a different device, none twice in a row:
+   rule-draw on the stage heads, stagger-rise on the evidence cards, lateral drift on the
+   schema rows, differential exit inside the fork and the deck, cascade on the bars, slow
+   exit inside the handoffs, a progress hairline on the status bar. (Prologue, rail recede,
+   treeline and night live with their own sections.) Two rules throughout: translate and
+   scale of decor only, never opacity on words; and never animate an element that already
+   carries an animation (tilt, run sweeps, entry rises), only its neighbours or children.
+   ========================================================================== */
+
+/* every stage head draws its rule left to right on arrival (decor: a pseudo-element, no text) */
+.stage-head {
+  position: relative;
+}
+.stage-head::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+/* evidence cards arrive staggered: the drop target, then the samples at three depths */
+@supports (animation-timeline: view()) {
+  .stage-head::after {
+    animation: rule-draw linear both;
+    animation-timeline: view();
+    animation-range: entry 30% entry 70%;
+  }
+  .drop {
+    animation: card-rise-2 linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 50%;
+  }
+  .sample:nth-child(3n + 1) {
+    animation: card-rise-1 linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 50%;
+  }
+  .sample:nth-child(3n + 2) {
+    animation: card-rise-2 linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 50%;
+  }
+  .sample:nth-child(3n + 3) {
+    animation: card-rise-3 linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 50%;
+  }
+  /* schema rows drift in laterally, alternating sides */
+  .schema-row:nth-child(odd) {
+    animation: row-from-right linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 45%;
+  }
+  .schema-row:nth-child(even) {
+    animation: row-from-left linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 45%;
+  }
+  /* the fork separates on exit: lanes leave faster than their prefix (differential) */
+  .fork-prefix {
+    animation: fork-drift-prefix linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  .fork-lanes {
+    animation: fork-drift-lanes linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  /* distribution bars cascade at three depths */
+  .bar:nth-child(3n + 1) {
+    animation: card-rise-1 linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 40%;
+  }
+  .bar:nth-child(3n + 2) {
+    animation: card-rise-2 linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 40%;
+  }
+  .bar:nth-child(3n + 3) {
+    animation: card-rise-3 linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 40%;
+  }
+  /* the deck halves separate: the island side lingers behind the spec sheet */
+  .deck-island {
+    animation: deck-drift linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  /* handoffs empty slowly: heading first, command and copy trailing */
+  .close h2 {
+    animation: close-drift-far linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  .close p,
+  .close .cmd,
+  .close figure {
+    animation: close-drift-near linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  /* the status bar reads scroll position as a hairline (decor, telemetry untouched) */
+  .sb-progress {
+    animation: sb-fill linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+
+@keyframes rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes card-rise-1 {
+  from {
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes card-rise-2 {
+  from {
+    transform: translate3d(0, 22px, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes card-rise-3 {
+  from {
+    transform: translate3d(0, 30px, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes row-from-right {
+  from {
+    transform: translate3d(14px, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes row-from-left {
+  from {
+    transform: translate3d(-14px, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes fork-drift-prefix {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+@keyframes fork-drift-lanes {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -26px, 0);
+  }
+}
+@keyframes deck-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -18px, 0);
+  }
+}
+@keyframes close-drift-far {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -30px, 0);
+  }
+}
+@keyframes close-drift-near {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -12px, 0);
+  }
+}
+@keyframes sb-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* the reading-position hairline on the status bar */
+.sb-progress {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -2416,6 +2880,29 @@ pre {
   .scene-clouds--near,
   .scene-hills--near {
     opacity: 0.85;
+  }
+  .prologue-eyebrow,
+  .prologue-title,
+  .prologue-sub,
+  .prologue-cta,
+  .prologue-note,
+  .rail-brand,
+  .rail-claim,
+  .stage-head::after,
+  .drop,
+  .sample,
+  .schema-row,
+  .fork-prefix,
+  .fork-lanes,
+  .bar,
+  .deck-island,
+  .close h2,
+  .close p,
+  .close .cmd,
+  .close figure,
+  .sb-progress {
+    animation: none !important;
+    transform: none !important;
   }
   .scene-pollen {
     display: none;
@@ -2469,10 +2956,6 @@ pre {
   }
   .scene-pollen {
     display: none;
-  }
-  .island-art {
-    max-width: 340px;
-    margin-inline: auto;
   }
   .scene-clouds {
     height: 38vh;

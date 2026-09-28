@@ -18,7 +18,9 @@
  *
  * Motion is transform and opacity only. The parallax is a CSS scroll-driven animation where the
  * browser has one (Chrome and Edge do, which is what this page targets) and it degrades to a
- * still painting everywhere else. Reduced motion gets the still painting.
+ * still painting everywhere else. Reduced motion gets the still painting. A fifth plane, a dark
+ * treeline on a positive translateZ so it travels fastest, rises as the reader descends toward
+ * the peak; it is transparent at rest and where scroll timelines are unsupported.
  */
 
 export function Scene() {
@@ -100,6 +102,17 @@ export function Scene() {
         <path
           d="M0 246 C 172 194 292 240 452 218 C 620 194 736 242 892 222 C 1032 204 1120 232 1200 218 L1200 320 L0 320 Z"
           fill="#c6dfb9"
+        />
+      </svg>
+
+      <svg
+        className="scene-layer scene-foreground"
+        viewBox="0 0 1200 320"
+        preserveAspectRatio="none"
+      >
+        <path
+          d="M0 320 L0 224.13 L-40 260 L-10.18 180.30 L19.62 260 L0.60 260 L29.60 148.67 L58.61 260 L27.30 260 L62.38 176.96 L97.45 260 L83.39 260 L133.24 96.14 L183.10 260 L148.19 260 L188.52 95.23 L228.86 260 L203.73 260 L229.18 174.57 L254.63 260 L245.98 260 L293.95 92.15 L341.91 260 L310.27 260 L338.15 129.49 L366.02 260 L341.13 260 L389.60 99.63 L438.06 260 L390.77 260 L436.17 138.63 L481.56 260 L433.83 260 L457.44 130.89 L481.04 260 L470.75 260 L516.58 115.09 L562.40 260 L525.95 260 L564.76 113.39 L603.58 260 L582.97 260 L625.37 81.06 L667.78 260 L636.39 260 L662.03 168.92 L687.68 260 L668.65 260 L695.08 105.43 L721.51 260 L704.99 260 L749.71 147.16 L794.44 260 L752.96 260 L783.31 187.90 L813.65 260 L787.02 260 L819.04 92.88 L851.05 260 L840.32 260 L868.52 94.15 L896.72 260 L878.84 260 L910.93 155.42 L943.02 260 L911.04 260 L960.50 178.67 L1009.96 260 L992.02 260 L1036.77 142.37 L1081.53 260 L1057.72 260 L1089.00 176.95 L1120.28 260 L1098.61 260 L1124.78 163.21 L1150.95 260 L1134.81 260 L1176.65 136.02 L1218.50 260 L1179.49 260 L1208.63 113.62 L1237.76 260 L1226.27 260 L1271.33 113.31 L1316.38 260 L1200 320 L1200 320 Z"
+          fill="#16293a"
         />
       </svg>
 

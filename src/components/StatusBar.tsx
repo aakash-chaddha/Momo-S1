@@ -28,6 +28,7 @@ export function StatusBar({
 }) {
   return (
     <div className="statusbar" role="status" aria-live="off">
+      <span className="sb-progress" aria-hidden="true" />
       <span className="sb-live">{phase}</span>
       <span className="sb sb-hide-sm">
         <span className="sb-key">model</span>

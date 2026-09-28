@@ -663,7 +663,12 @@ async function distPass(browser, out) {
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text().slice(0, 200)));
   page.on('pageerror', (e) => errors.push(`pageerror: ${String(e).slice(0, 200)}`));
   page.on('request', (r) => {
-    if (!r.url().startsWith(base)) external.push(r.url().slice(0, 120));
+    const u = r.url();
+    // blob: and data: URLs are same-page memory objects, not network traffic (in-page decoders
+    // and the data: favicon work this way). Neither leaves the page, so neither counts against
+    // the zero-external-requests rule.
+    if (u.startsWith('blob:') || u.startsWith('data:')) return;
+    if (!u.startsWith(base)) external.push(u.slice(0, 120));
   });
   await page.goto(base, { waitUntil: 'load', timeout: 60_000 });
   await page.waitForSelector('#stage-wire', { timeout: 60_000 });

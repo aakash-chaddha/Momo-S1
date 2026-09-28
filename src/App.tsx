@@ -37,7 +37,6 @@ import {
   type QuestionInput,
 } from './lib/webmcp';
 import { EvidencePanel } from './components/EvidencePanel';
-import { Island } from './components/Island';
 import { Scene } from './components/Scene';
 import { QuestionPanel } from './components/QuestionPanel';
 import { DecisionPanel, GenerationPanel } from './components/RunPanels';
@@ -48,6 +47,7 @@ import { StageRail, type StageRow } from './components/StageRail';
 import { StatusBar } from './components/StatusBar';
 import { NativeHandoff } from './components/NativeHandoff';
 import { AgentHandoff } from './components/AgentHandoff';
+import { Prologue } from './components/Prologue';
 import type { LaneSpec } from './components/ForkRail';
 
 type Phase = 'idle' | 'downloading' | 'loading' | 'ready';
@@ -683,12 +683,14 @@ export default function App() {
   }
 
   return (
-    <>
+    <div className="page">
       <Scene />
       <div className="app" data-phase={phase}>
       <a className="skip" href="#stage-00">
         skip to the stages
       </a>
+
+      <Prologue phase={phase} model={model} progress={progress} onLoad={() => void loadModel()} />
 
       <div className="shell">
         <StageRail
@@ -842,7 +844,6 @@ export default function App() {
                   {model.note}
                 </div>
               </div>
-                <Island />
               </div>
 
               <div className="panel deck-spec">
@@ -1105,6 +1106,6 @@ export default function App() {
         ratio={ratio}
       />
       </div>
-    </>
+    </div>
   );
 }

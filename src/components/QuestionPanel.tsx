@@ -130,9 +130,7 @@ export function QuestionPanel({
           </select>
         </label>
         <span className="spacer" />
-        <span className="status">
-          a preset is a start, not a limit · + add field keeps going up to the endpoint's 64
-        </span>
+        <span className="status">a preset is a start, not a limit</span>
       </div>
 
       <label className="field">
@@ -316,9 +314,12 @@ export function QuestionPanel({
                 );
               })}
             </div>
-            <button type="button" className="ghost" onClick={add} disabled={disabled}>
-              + add field
-            </button>
+            <div className="row">
+              <button type="button" className="ghost" onClick={add} disabled={disabled}>
+                + add field
+              </button>
+              <span className="status">up to the endpoint's 64</span>
+            </div>
           </>
         )
       )}
