@@ -21,8 +21,6 @@ No backend, no upload, no API key. The model and the engine both run in the brow
 5. and then the honest part: the same weights answer the same question the old way, and the two
    clocks and the two answers are laid side by side for you to judge.
 
-![The one pass section: the fork rail, the engine's time split and the per-field distributions](docs/img/02-decision.webp)
-
 ## Try it in two minutes
 
 Requirements: Chrome or Edge (desktop), Node 18+, a free ~350 MiB of disk for the cached weights.
@@ -55,7 +53,7 @@ Open <http://localhost:5173/>, then:
 On a 16-core desktop CPU (wasm, no GPU) a recorded run measured (an eight-field schema of that
 period; the presets now ship at most three fields, so your pass scores fewer rows):
 
-| | |
+| run | measured |
 |---|---|
 | first decision (cold prefix, image encoded) | **15.9 s** wall · 13.7 s prefill + 2.2 s scoring, 47 scored rows, 640 prompt tokens (72 of them image), 8/8 fields with an exact distribution |
 | every later decision (same image and schema) | **4.9 s** wall · the instructions and field catalogue come from the prompt cache (544/640 tokens) and the vision encoder output comes from the media cache |
@@ -149,7 +147,7 @@ Section **03** shows both the request and the response JSON, with copy and downl
   writes a report to `e2e/out/ui/`. It measures contrast on the composited pixels of every line of
   text at every scroll position, checks for horizontal overflow, walks the tab order for a visible
   focus ring, and re-checks the reduced-motion composition. `--update-docs` also refreshes the
-  three screenshots above (as WebP; it needs ffmpeg on the path).
+  screenshots in `docs/img/` (as WebP; it needs ffmpeg on the path).
 
 ## Drive it from an agent (WebMCP)
 
@@ -163,8 +161,6 @@ Chrome or Edge, ChatGPT Desktop, an extension, an iframe agent) can then load th
 evidence and the question, run either pass and read the result, without scraping the DOM or
 re-driving the buttons. The tools call the same handlers the buttons call, so an agent's run is the
 run you would get from stage 03 / 04 / 05, on the same engine, in the same state.
-
-![A chat driving the page: the site tools menu lists the nine WebMCP tools the page registered, and the chat has loaded the model, set the evidence and run both passes, with both answers and their probabilities in the table below](public/img/use-it-using-chatgpt-directly.png)
 
 | tool | does |
 |---|---|
@@ -263,7 +259,7 @@ src/                    the page (React + TypeScript)
   assets/fonts/         Fraunces and Nunito Sans, vendored (see assets/fonts/README.md)
 lib/wllama/             the wasm library: fork source + prebuilt wllama.wasm (see PROVENANCE.md)
 public/samples/         the sample evidence: complaint emails and product screenshots
-public/img/             the screenshot of a chat driving this page (WebMCP section above)
+public/img/             the screenshot shown in the in-page agent handoff card
 e2e/make-samples.mjs    renders those screenshots (node e2e/make-samples.mjs)
 e2e/decision-smoke.mjs  headless end-to-end run (npm run smoke)
 e2e/webmcp-smoke.mjs    the WebMCP tools driven end to end (npm run smoke:webmcp)
